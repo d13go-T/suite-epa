@@ -6,9 +6,12 @@
 <meta name="theme-color" content="#141416">
 <title>Estopmouyon · EPA</title>
 <link rel="stylesheet" href="epa-theme.css">
+<!-- Librerías de exportación (MP4 H.264 con mp4-muxer + WebCodecs y GIF animado con gif.js) -->
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
 <style>
   /* ==========================================================================
-     Estopmouyon · Paso 2: Visor unificado (Cámara en vivo + Vista de cuadro + Player)
+     Estopmouyon · Paso 4: Exportación MP4 (H.264) / GIF animado + 1080p
      Complementa epa-theme.css (hereda variables de tema claro/oscuro)
      ========================================================================== */
   :root {
@@ -76,7 +79,7 @@
   /* Stage de cámara / visor */
   #stage {
     flex: 1;
-    min-height: 160px;
+    min-height: 150px;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -218,7 +221,7 @@
     color: var(--accent);
   }
 
-  /* Dock de controles de captura (centrado y agrupado para PC y móvil) */
+  /* Dock de controles de captura */
   #captureBar {
     position: absolute;
     bottom: 12px;
@@ -326,7 +329,7 @@
     color: #fff;
   }
 
-  /* Línea de tiempo con controles de transporte integrados */
+  /* Línea de tiempo con controles de transporte y edición de cuadros */
   #timelinePanel {
     background: var(--card);
     border: 1px solid var(--border);
@@ -346,6 +349,7 @@
   .timeline-title-group {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
   }
   #timelineHeader h3 {
@@ -356,11 +360,18 @@
     color: var(--muted);
   }
 
-  /* Controles de reproducción directa (Play/Pausa, Anterior/Siguiente, Bucle, Volver a cámara) */
-  .transport-bar {
+  /* Controles de reproducción y edición de cuadros */
+  .transport-bar, .frame-edit-bar {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-wrap: wrap;
+  }
+  .toolbar-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 2px;
   }
   .transport-btn {
     height: 30px;
@@ -378,7 +389,11 @@
     gap: 5px;
     transition: all 0.15s;
   }
-  .transport-btn:hover { background: var(--surface-hover); }
+  .transport-btn:hover:not(:disabled) { background: var(--surface-hover); }
+  .transport-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
   .transport-btn.active {
     background: var(--accent-grad);
     color: #fff;
@@ -406,9 +421,11 @@
     border-radius: 8px;
     overflow: hidden;
     background: #000;
-    cursor: pointer;
-    transition: transform 0.12s, border-color 0.12s;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.12s, border-color 0.12s, opacity 0.12s;
   }
+  .thumb:active { cursor: grabbing; }
   .thumb:hover { border-color: var(--muted); }
   .thumb.current {
     border-color: var(--accent);
@@ -419,7 +436,23 @@
     border-color: #38bdf8;
     box-shadow: 0 3px 10px rgba(56, 189, 248, 0.35);
   }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb.dragging {
+    opacity: 0.45;
+    transform: scale(0.95);
+  }
+  .thumb.drag-over-left {
+    box-shadow: -4px 0 0 0 #38bdf8;
+  }
+  .thumb.drag-over-right {
+    box-shadow: 4px 0 0 0 #38bdf8;
+  }
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+  }
   .thumb .num {
     position: absolute;
     top: 3px;
@@ -504,6 +537,7 @@
     margin-bottom: 6px;
   }
   .form-row input[type="text"],
+  .form-row input[type="number"],
   .form-row select {
     width: 100%;
     padding: 9px 10px;
@@ -538,6 +572,45 @@
     margin-top: 18px;
     padding-top: 12px;
     border-top: 1px solid var(--border);
+  }
+
+  /* Barra de progreso de exportación */
+  .progress-wrap {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(128, 128, 128, 0.25);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-grad);
+    transition: width 0.15s ease-out;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .export-hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.45;
+    background: var(--surface-subtle);
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
   }
 
   /* Projects grid */
@@ -608,11 +681,12 @@
   #errorBanner.show { display: block; }
   #errorBanner .close { float: right; cursor: pointer; margin-left: 10px; font-weight: 700; }
 
-  @media (max-width: 480px) {
+  @media (max-width: 600px) {
     .studio-main { padding: 6px 8px calc(6px + var(--safe-bottom)); gap: 6px; }
     #captureBar { bottom: 8px; padding: 8px 10px; width: calc(100% - 16px); }
     #captureBtn { width: 58px; height: 58px; }
     #captureBtn .inner { width: 44px; height: 44px; }
+    .btn-label-hide-sm { display: none; }
   }
 </style>
 </head>
@@ -653,6 +727,7 @@
           <span class="status-chip mode-live" id="chipMode">Cámara en vivo</span>
           <span class="status-chip" id="chipFrame">Cuadro 0/0</span>
           <span class="status-chip" id="chipFps">12 FPS</span>
+          <span class="status-chip" id="chipRes">1080p</span>
           <span class="status-chip" id="chipDur">0.0s</span>
         </div>
         <div class="stage-top-actions">
@@ -693,7 +768,7 @@
         </div>
 
         <div id="secondaryRow">
-          <button class="cam-pill" id="fpsBtn" title="Cambiar velocidad (FPS)">
+          <button class="cam-pill" id="fpsBtn" title="Cambiar velocidad (4, 6, 8, 10, 12, 15, 18, 24, 30 FPS)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             <span id="fpsPillLabel">12 FPS</span>
           </button>
@@ -736,6 +811,25 @@
               <span>Cámara</span>
             </button>
           </div>
+
+          <span class="toolbar-divider"></span>
+
+          <div class="frame-edit-bar" aria-label="Edición de cuadro seleccionado">
+            <button class="transport-btn" id="moveLeftBtn" title="Mover cuadro seleccionado a la izquierda">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="transport-btn" id="moveRightBtn" title="Mover cuadro seleccionado a la derecha">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="transport-btn" id="duplicateFrameBtn" title="Duplicar cuadro seleccionado (+1 copia)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span class="btn-label-hide-sm">Duplicar</span>
+            </button>
+            <button class="transport-btn" id="repeatFrameBtn" title="Repetir / estirar cuadro varias veces">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+              <span>Repetir</span>
+            </button>
+          </div>
         </div>
         <div style="display:flex; gap:6px;">
           <button class="btn btn-sm" id="clearAllBtn">Limpiar todo</button>
@@ -754,6 +848,27 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Repeat / Hold modal -->
+<div class="modal-backdrop" id="repeatModal" style="display:none;">
+  <div class="modal" style="width: min(360px, 92vw);">
+    <h2>Repetir / Estirar cuadro</h2>
+    <div class="form-row">
+      <label>Cantidad de copias extra a insertar después del cuadro <strong id="repeatFrameNum">1</strong></label>
+      <div class="chips" id="repeatPresetChips" style="margin-bottom: 10px;">
+        <button class="chip-btn selected" data-copies="1">+1 (en 2s)</button>
+        <button class="chip-btn" data-copies="2">+2 (en 3s)</button>
+        <button class="chip-btn" data-copies="3">+3 copias</button>
+        <button class="chip-btn" data-copies="5">+5 copias</button>
+      </div>
+      <input type="number" id="repeatCopiesInput" min="1" max="60" value="1">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('repeatModal')">Cancelar</button>
+      <button class="btn btn-primary" id="confirmRepeatBtn">Aplicar</button>
+    </div>
+  </div>
+</div>
 
 <!-- Projects modal -->
 <div class="modal-backdrop" id="projectsModal" style="display:none;">
@@ -786,12 +901,11 @@
       </div>
     </div>
     <div class="form-row">
-      <label>Resolución máxima (ancho)</label>
+      <label>Resolución de captura y previsualización</label>
       <div class="chips" id="resChips">
-        <button class="chip-btn" data-res="480">480p</button>
-        <button class="chip-btn" data-res="640">640p</button>
-        <button class="chip-btn selected" data-res="854">854p</button>
-        <button class="chip-btn" data-res="1280">1280p</button>
+        <button class="chip-btn" data-res="480">480p (854×480)</button>
+        <button class="chip-btn" data-res="720">720p (1280×720)</button>
+        <button class="chip-btn selected" data-res="1080">1080p Full HD (1920×1080)</button>
       </div>
     </div>
     <div class="form-row">
@@ -816,13 +930,13 @@
   </div>
 </div>
 
-<!-- Export modal (base lista para el Paso 4) -->
+<!-- Export modal (Paso 4: MP4 H.264 / GIF animado + hasta 1080p) -->
 <div class="modal-backdrop" id="exportModal" style="display:none;">
   <div class="modal">
     <h2>Exportar animación</h2>
     <div class="form-row">
       <label>Formato</label>
-      <div class="chips">
+      <div class="chips" id="exportFormatChips">
         <button class="chip-btn selected" data-fmt="mp4" id="fmtMp4">MP4 (H.264)</button>
         <button class="chip-btn" data-fmt="gif" id="fmtGif">GIF animado</button>
       </div>
@@ -830,28 +944,101 @@
     <div class="form-row">
       <label>FPS de exportación</label>
       <select id="exportFps">
-        <option>1</option><option>2</option><option>3</option><option>5</option>
-        <option>6</option><option selected>12</option><option>15</option><option>18</option><option>24</option><option>30</option>
+        <option value="4">4 FPS</option>
+        <option value="6">6 FPS</option>
+        <option value="8">8 FPS</option>
+        <option value="10">10 FPS</option>
+        <option value="12" selected>12 FPS</option>
+        <option value="15">15 FPS</option>
+        <option value="18">18 FPS</option>
+        <option value="24">24 FPS</option>
+        <option value="30">30 FPS</option>
       </select>
     </div>
     <div class="form-row">
-      <label>Ancho de salida (px)</label>
-      <select id="exportWidth">
-        <option value="320">320 (ligero)</option>
-        <option value="480" selected>480</option>
-        <option value="640">640</option>
-        <option value="854">854</option>
-        <option value="1280">1280 (HD)</option>
+      <label>Resolución de salida</label>
+      <select id="exportRes">
+        <option value="480">480p (ligero)</option>
+        <option value="720">720p HD</option>
+        <option value="1080" selected>1080p Full HD</option>
       </select>
     </div>
+    <div class="export-hint" id="exportHintText">
+      MP4 H.264 acelerado por hardware (WebCodecs), compatible con redes sociales y editores de video.
+    </div>
+    <div class="progress-wrap" id="exportProgressWrap" style="display:none;">
+      <div class="progress-track">
+        <div class="progress-bar" id="exportProgressBar"></div>
+      </div>
+      <div class="progress-meta">
+        <span id="exportProgressText">Preparando cuadros...</span>
+        <span id="exportProgressPct">0%</span>
+      </div>
+    </div>
     <div class="modal-actions">
-      <button class="btn" onclick="closeModal('exportModal')">Cerrar</button>
+      <button class="btn" id="cancelExportBtn">Cerrar</button>
+      <button class="btn btn-primary" id="startExportBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Generar y descargar</span>
+      </button>
     </div>
   </div>
 </div>
 
 <script>
 'use strict';
+
+// ============================================================
+// CONSTANTS & RESOLUTION HELPERS (480p / 720p / 1080p)
+// ============================================================
+const FPS_OPTIONS = [4, 6, 8, 10, 12, 15, 18, 24, 30];
+const RES_TIERS = [480, 720, 1080];
+
+const ASPECTS = {
+  landscape: 16 / 9,
+  portrait: 9 / 16,
+  square: 1,
+};
+
+const ASPECT_LABELS = {
+  landscape: '16:9',
+  portrait: '9:16',
+  square: '1:1',
+};
+
+/**
+ * Calcula dimensiones pares (requisito de H.264 / YUV420) según el nivel de resolución (480p, 720p, 1080p)
+ * y la orientación elegida:
+ * - 16:9 -> 854x480, 1280x720, 1920x1080
+ * - 9:16 -> 480x854, 720x1280, 1080x1920
+ * - 1:1  -> 480x480, 720x720, 1080x1080
+ */
+function getTargetDimensions(resTier, orient) {
+  const tier = RES_TIERS.includes(Number(resTier)) ? Number(resTier) : 1080;
+  let w, h;
+  if (orient === 'landscape') {
+    h = tier;
+    w = Math.round((tier * 16) / 9);
+  } else if (orient === 'portrait') {
+    w = tier;
+    h = Math.round((tier * 16) / 9);
+  } else {
+    w = tier;
+    h = tier;
+  }
+  // Asegurar múltiplos de 2 para codificadores H.264
+  w = w % 2 === 0 ? w : w + 1;
+  h = h % 2 === 0 ? h : h + 1;
+  return { w, h };
+}
+
+function normalizeLegacyResTier(val) {
+  const num = Number(val);
+  if (RES_TIERS.includes(num)) return num;
+  if (num >= 1080) return 1080;
+  if (num >= 720) return 720;
+  return 480;
+}
 
 // ============================================================
 // THEME (Modo claro / oscuro compartido con epa-theme.css)
@@ -883,13 +1070,13 @@ const state = {
   facingMode: 'environment',
   frames: [],
   currentFrameIndex: -1,
-  viewMode: 'live', // 'live' (cámara en vivo) | 'preview' (cuadro seleccionado o reproducción)
+  viewMode: 'live', // 'live' | 'preview'
   playing: false,
   loop: true,
   playTimer: null,
   fps: 12,
   orient: 'landscape',
-  resWidth: 854,
+  resTier: 1080, // 480 | 720 | 1080 (Full HD por defecto)
   fitMode: 'cover',
   onionEnabled: false,
   onionOpacity: 0.4,
@@ -901,19 +1088,11 @@ const state = {
   undoStack: [],
   db: null,
   capturing: false,
+  dragSrcIndex: null,
+  exportFormat: 'mp4',
+  exporting: false,
+  exportCancelled: false,
   _createdAt: null,
-};
-
-const ASPECTS = {
-  landscape: 16 / 9,
-  portrait: 9 / 16,
-  square: 1,
-};
-
-const ASPECT_LABELS = {
-  landscape: '16:9',
-  portrait: '9:16',
-  square: '1:1',
 };
 
 // ============================================================
@@ -1024,6 +1203,28 @@ function dbSaveFrame(frame) {
   });
 }
 
+function dbSyncFrameOrder() {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_FRAMES], 'readwrite');
+    const store = tx.objectStore(STORE_FRAMES);
+    state.frames.forEach((f, idx) => {
+      f.seqIndex = idx + 1;
+      store.put({
+        id: f.id,
+        projectId: f.projectId,
+        blob: f.blob,
+        thumbBlob: f.thumbBlob,
+        w: f.w,
+        h: f.h,
+        capturedAt: f.capturedAt,
+        seqIndex: f.seqIndex,
+      });
+    });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 function dbLoadFrames(projectId) {
   return new Promise((resolve, reject) => {
     const tx = state.db.transaction([STORE_FRAMES], 'readonly');
@@ -1125,7 +1326,6 @@ function startPlayback() {
   }
   if (state.playing) return;
 
-  // Si estábamos viendo el último cuadro o en cámara en vivo, arrancar desde el principio
   if (state.viewMode === 'live' || state.currentFrameIndex >= state.frames.length - 1 || state.currentFrameIndex < 0) {
     state.currentFrameIndex = 0;
   }
@@ -1174,7 +1374,7 @@ function togglePlayback() {
 }
 
 // ============================================================
-// CAMERA & VIEWPORT SIZING
+// CAMERA & VIEWPORT SIZING (Soporta 1080p Full HD ideal)
 // ============================================================
 async function initCamera() {
   try {
@@ -1182,11 +1382,13 @@ async function initCamera() {
       state.stream.getTracks().forEach(t => t.stop());
       state.stream = null;
     }
+    const idealW = state.resTier >= 1080 ? 1920 : state.resTier >= 720 ? 1280 : 854;
+    const idealH = state.resTier >= 1080 ? 1080 : state.resTier >= 720 ? 720 : 480;
     const constraints = {
       video: {
         facingMode: state.facingMode,
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
+        width: { ideal: idealW },
+        height: { ideal: idealH },
       },
       audio: false,
     };
@@ -1250,12 +1452,11 @@ function resizeCanvases() {
 }
 
 // ============================================================
-// CAPTURE
+// CAPTURE (Hasta 1920x1080 Full HD)
 // ============================================================
 async function captureFrame() {
   if (state.capturing) return;
 
-  // Si estaba previsualizando o reproduciendo, vuelve a cámara en vivo antes de capturar
   if (state.viewMode !== 'live' || state.playing) {
     returnToLiveCamera();
   }
@@ -1268,8 +1469,7 @@ async function captureFrame() {
     const vh = video.videoHeight;
     if (!vw || !vh) throw new Error('Cámara no lista');
 
-    const targetW = state.resWidth;
-    const targetH = Math.round(targetW / ASPECTS[state.orient]);
+    const { w: targetW, h: targetH } = getTargetDimensions(state.resTier, state.orient);
 
     const tmp = document.createElement('canvas');
     tmp.width = targetW;
@@ -1312,7 +1512,7 @@ async function captureFrame() {
       tctx.restore();
     }
 
-    const blob = await new Promise(res => tmp.toBlob(res, 'image/jpeg', 0.92));
+    const blob = await new Promise(res => tmp.toBlob(res, 'image/jpeg', 0.93));
     const url = URL.createObjectURL(blob);
 
     const thumbCanvas = document.createElement('canvas');
@@ -1360,6 +1560,83 @@ async function captureFrame() {
   }
 }
 
+// ============================================================
+// PASO 3: DUPLICAR, REPETIR Y REORDENAR CUADROS
+// ============================================================
+function createFrameClone(sourceFrame) {
+  return {
+    id: 'f_' + Date.now() + '_' + Math.floor(Math.random() * 100000),
+    blob: sourceFrame.blob,
+    url: URL.createObjectURL(sourceFrame.blob),
+    thumbBlob: sourceFrame.thumbBlob,
+    thumbUrl: URL.createObjectURL(sourceFrame.thumbBlob),
+    w: sourceFrame.w,
+    h: sourceFrame.h,
+    capturedAt: Date.now(),
+    seqIndex: 0,
+    projectId: state.projectId,
+  };
+}
+
+async function repeatActiveFrame(extraCopies = 1) {
+  if (state.frames.length === 0) {
+    showToast('No hay cuadros para duplicar');
+    return;
+  }
+  pausePlayback();
+  const idx = state.currentFrameIndex >= 0 ? state.currentFrameIndex : state.frames.length - 1;
+  const source = state.frames[idx];
+  const clones = [];
+  for (let i = 0; i < extraCopies; i++) {
+    clones.push(createFrameClone(source));
+  }
+
+  state.frames.splice(idx + 1, 0, ...clones);
+  state.currentFrameIndex = idx + clones.length;
+  state.undoStack.push({
+    type: 'duplicate',
+    insertedIds: clones.map(c => c.id),
+    prevIndex: idx,
+  });
+
+  await dbSyncFrameOrder();
+  await saveProjectMeta();
+  syncViewportDisplay();
+  updateStatus();
+  renderTimeline(true);
+  if (state.viewMode === 'live') drawOnion();
+
+  showToast(
+    extraCopies === 1
+      ? `Cuadro ${idx + 1} duplicado`
+      : `Cuadro ${idx + 1} repetido (+${extraCopies} copias)`
+  );
+}
+
+async function moveFrame(fromIndex, toIndex) {
+  if (
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= state.frames.length ||
+    toIndex >= state.frames.length ||
+    fromIndex === toIndex
+  ) {
+    return;
+  }
+  pausePlayback();
+  const [moved] = state.frames.splice(fromIndex, 1);
+  state.frames.splice(toIndex, 0, moved);
+  state.currentFrameIndex = toIndex;
+  state.undoStack.push({ type: 'reorder', from: fromIndex, to: toIndex });
+
+  await dbSyncFrameOrder();
+  await saveProjectMeta();
+  syncViewportDisplay();
+  updateStatus();
+  renderTimeline(true);
+  if (state.viewMode === 'live') drawOnion();
+}
+
 async function deleteFrame(id) {
   pausePlayback();
   const idx = state.frames.findIndex(f => f.id === id);
@@ -1374,6 +1651,7 @@ async function deleteFrame(id) {
     state.currentFrameIndex = state.frames.length - 1;
   }
   state.undoStack.push({ type: 'delete', frame: snapshot, idx });
+  await dbSyncFrameOrder();
   syncViewportDisplay();
   updateStatus();
   renderTimeline(false);
@@ -1401,29 +1679,322 @@ async function undo() {
       } else if (state.currentFrameIndex >= state.frames.length) {
         state.currentFrameIndex = state.frames.length - 1;
       }
+      await dbSyncFrameOrder();
       syncViewportDisplay();
       updateStatus();
       renderTimeline(true);
       await saveProjectMeta();
       showToast('Captura deshecha');
     }
+  } else if (op.type === 'duplicate') {
+    const idsSet = new Set(op.insertedIds);
+    const removed = state.frames.filter(f => idsSet.has(f.id));
+    removed.forEach(f => {
+      URL.revokeObjectURL(f.url);
+      URL.revokeObjectURL(f.thumbUrl);
+    });
+    state.frames = state.frames.filter(f => !idsSet.has(f.id));
+    for (const id of op.insertedIds) {
+      await dbDeleteFrame(id);
+    }
+    state.currentFrameIndex = Math.min(op.prevIndex, state.frames.length - 1);
+    await dbSyncFrameOrder();
+    syncViewportDisplay();
+    updateStatus();
+    renderTimeline(true);
+    await saveProjectMeta();
+    showToast('Duplicación deshecha');
+  } else if (op.type === 'reorder') {
+    const [moved] = state.frames.splice(op.to, 1);
+    state.frames.splice(op.from, 0, moved);
+    state.currentFrameIndex = op.from;
+    await dbSyncFrameOrder();
+    syncViewportDisplay();
+    updateStatus();
+    renderTimeline(true);
+    await saveProjectMeta();
+    showToast('Orden restaurado');
   } else if (op.type === 'delete' && op.frame) {
     state.frames.splice(op.idx, 0, op.frame);
-    await dbSaveFrame({
-      id: op.frame.id,
-      projectId: op.frame.projectId,
-      blob: op.frame.blob,
-      thumbBlob: op.frame.thumbBlob,
-      w: op.frame.w, h: op.frame.h,
-      capturedAt: op.frame.capturedAt,
-      seqIndex: op.frame.seqIndex,
-    });
     state.currentFrameIndex = op.idx;
+    await dbSyncFrameOrder();
     syncViewportDisplay();
     updateStatus();
     renderTimeline(true);
     await saveProjectMeta();
     showToast('Cuadro restaurado');
+  }
+}
+
+// ============================================================
+// PASO 4: EXPORTACIÓN MP4 (H.264 vía WebCodecs + mp4-muxer) Y GIF
+// ============================================================
+function updateExportProgress(pct, text) {
+  $('exportProgressWrap').style.display = 'block';
+  $('exportProgressBar').style.width = `${Math.min(100, Math.max(0, pct))}%`;
+  $('exportProgressPct').textContent = `${Math.round(pct)}%`;
+  $('exportProgressText').textContent = text;
+}
+
+function resetExportModalUI() {
+  $('exportProgressWrap').style.display = 'none';
+  $('exportProgressBar').style.width = '0%';
+  $('startExportBtn').disabled = false;
+  $('cancelExportBtn').textContent = 'Cerrar';
+}
+
+function loadImageElement(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('No se pudo decodificar un cuadro'));
+    img.src = url;
+  });
+}
+
+function drawFrameToExportCanvas(ctx, img, outW, outH) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, outW, outH);
+  const srcAspect = img.naturalWidth / img.naturalHeight;
+  const dstAspect = outW / outH;
+  let dw, dh, dx, dy;
+  if (Math.abs(srcAspect - dstAspect) < 0.01) {
+    dw = outW; dh = outH; dx = 0; dy = 0;
+  } else if (srcAspect > dstAspect) {
+    dw = outW; dh = outW / srcAspect;
+    dx = 0; dy = (outH - dh) / 2;
+  } else {
+    dh = outH; dw = outH * srcAspect;
+    dx = (outW - dw) / 2; dy = 0;
+  }
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function sanitizeFilename(name) {
+  return (name || 'animacion')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9áéíóúñ_-]+/gi, '_')
+    .replace(/^_+|_+$/g, '') || 'animacion';
+}
+
+async function exportAsMp4(fps, outW, outH) {
+  if (typeof VideoEncoder === 'undefined' || typeof Mp4Muxer === 'undefined') {
+    throw new Error('Tu navegador no soporta codificación MP4 H.264 nativa. Probá exportar en formato GIF animado o usá Chrome/Edge.');
+  }
+
+  const totalFrames = state.frames.length;
+  const frameDurationUs = Math.round(1_000_000 / fps);
+  // Bitrate proporcional a resolución (hasta ~10 Mbps para 1080p)
+  const pixels = outW * outH;
+  const bitrate = Math.min(12_000_000, Math.max(2_000_000, Math.round(pixels * 4.5)));
+
+  const codecCandidates = [
+    'avc1.640028', // High Profile L4.0 (soporta 1080p30)
+    'avc1.4d4028', // Main Profile L4.0
+    'avc1.420028', // Baseline L4.0
+    'avc1.42001f', // Baseline L3.1
+  ];
+
+  let selectedCodec = null;
+  for (const codec of codecCandidates) {
+    const support = await VideoEncoder.isConfigSupported({
+      codec,
+      width: outW,
+      height: outH,
+      bitrate,
+      framerate: fps,
+    });
+    if (support.supported) {
+      selectedCodec = codec;
+      break;
+    }
+  }
+
+  if (!selectedCodec) {
+    throw new Error(`No hay perfil H.264 disponible para ${outW}×${outH} en este dispositivo. Probá 720p o formato GIF.`);
+  }
+
+  const muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: {
+      codec: 'avc',
+      width: outW,
+      height: outH,
+    },
+    fastStart: 'in-memory',
+  });
+
+  let encoderError = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error: (err) => { encoderError = err; },
+  });
+
+  encoder.configure({
+    codec: selectedCodec,
+    width: outW,
+    height: outH,
+    bitrate,
+    framerate: fps,
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = outW;
+  canvas.height = outH;
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  for (let i = 0; i < totalFrames; i++) {
+    if (state.exportCancelled) {
+      encoder.close();
+      return null;
+    }
+    if (encoderError) throw encoderError;
+
+    updateExportProgress((i / totalFrames) * 88, `Codificando cuadro ${i + 1} de ${totalFrames} (${outW}×${outH})...`);
+    const img = await loadImageElement(state.frames[i].url);
+    drawFrameToExportCanvas(ctx, img, outW, outH);
+
+    const timestamp = i * frameDurationUs;
+    const videoFrame = new VideoFrame(canvas, {
+      timestamp,
+      duration: frameDurationUs,
+    });
+    const keyFrame = i % Math.max(1, fps) === 0;
+    encoder.encode(videoFrame, { keyFrame });
+    videoFrame.close();
+
+    // Ceder brevemente al hilo principal para mantener fluida la barra de progreso
+    if (i % 4 === 0) {
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  updateExportProgress(92, 'Finalizando contenedor MP4...');
+  await encoder.flush();
+  encoder.close();
+  if (encoderError) throw encoderError;
+
+  muxer.finalize();
+  updateExportProgress(100, '¡MP4 listo!');
+  return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+}
+
+async function createGifWorkerBlobUrl() {
+  const resp = await fetch('https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js');
+  if (!resp.ok) throw new Error('No se pudo cargar el worker de GIF');
+  const code = await resp.text();
+  return URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+}
+
+async function exportAsGif(fps, outW, outH) {
+  if (typeof GIF === 'undefined') {
+    throw new Error('La librería de exportación GIF no está disponible.');
+  }
+  const totalFrames = state.frames.length;
+  const delayMs = Math.round(1000 / fps);
+  const workerUrl = await createGifWorkerBlobUrl();
+
+  const canvas = document.createElement('canvas');
+  canvas.width = outW;
+  canvas.height = outH;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  const gif = new GIF({
+    workers: 2,
+    quality: 10,
+    width: outW,
+    height: outH,
+    workerScript: workerUrl,
+  });
+
+  for (let i = 0; i < totalFrames; i++) {
+    if (state.exportCancelled) {
+      URL.revokeObjectURL(workerUrl);
+      return null;
+    }
+    updateExportProgress((i / totalFrames) * 50, `Preparando cuadro ${i + 1} de ${totalFrames}...`);
+    const img = await loadImageElement(state.frames[i].url);
+    drawFrameToExportCanvas(ctx, img, outW, outH);
+    gif.addFrame(ctx, { copy: true, delay: delayMs });
+  }
+
+  return new Promise((resolve, reject) => {
+    gif.on('progress', (p) => {
+      if (state.exportCancelled) {
+        gif.abort();
+        URL.revokeObjectURL(workerUrl);
+        resolve(null);
+        return;
+      }
+      updateExportProgress(50 + p * 50, `Renderizando GIF animado (${Math.round(p * 100)}%)...`);
+    });
+    gif.on('finished', (blob) => {
+      URL.revokeObjectURL(workerUrl);
+      updateExportProgress(100, '¡GIF listo!');
+      resolve(blob);
+    });
+    gif.on('error', (err) => {
+      URL.revokeObjectURL(workerUrl);
+      reject(err);
+    });
+    gif.render();
+  });
+}
+
+async function runExport() {
+  if (state.exporting) return;
+  if (state.frames.length === 0) {
+    showToast('Capturá al menos un cuadro antes de exportar');
+    return;
+  }
+
+  const fps = parseInt($('exportFps').value, 10) || state.fps;
+  const resTier = parseInt($('exportRes').value, 10) || state.resTier;
+  const { w: outW, h: outH } = getTargetDimensions(resTier, state.orient);
+  const fmt = state.exportFormat;
+
+  state.exporting = true;
+  state.exportCancelled = false;
+  $('startExportBtn').disabled = true;
+  $('cancelExportBtn').textContent = 'Cancelar';
+  updateExportProgress(2, `Iniciando exportación ${resTier}p (${outW}×${outH}) a ${fps} FPS...`);
+
+  try {
+    let blob = null;
+    if (fmt === 'mp4') {
+      blob = await exportAsMp4(fps, outW, outH);
+    } else {
+      blob = await exportAsGif(fps, outW, outH);
+    }
+
+    if (blob && !state.exportCancelled) {
+      const ext = fmt === 'mp4' ? 'mp4' : 'gif';
+      const baseName = sanitizeFilename(state.projectName);
+      const filename = `${baseName}_${resTier}p_${fps}fps.${ext}`;
+      triggerDownload(blob, filename);
+      showToast(`Descargado: ${filename}`);
+      setTimeout(() => {
+        closeModal('exportModal');
+        resetExportModalUI();
+      }, 650);
+    }
+  } catch (e) {
+    showError('Error al exportar: ' + e.message);
+    resetExportModalUI();
+  } finally {
+    state.exporting = false;
   }
 }
 
@@ -1486,10 +2057,21 @@ function drawGrid() {
 }
 
 // ============================================================
-// TIMELINE
+// TIMELINE & DRAG-AND-DROP REORDER
 // ============================================================
+function updateEditButtonsState() {
+  const hasFrames = state.frames.length > 0;
+  const idx = state.currentFrameIndex;
+  $('duplicateFrameBtn').disabled = !hasFrames;
+  $('repeatFrameBtn').disabled = !hasFrames;
+  $('moveLeftBtn').disabled = !hasFrames || idx <= 0;
+  $('moveRightBtn').disabled = !hasFrames || idx < 0 || idx >= state.frames.length - 1;
+}
+
 function renderTimeline(scrollToActive = false) {
   timelineStrip.innerHTML = '';
+  updateEditButtonsState();
+
   if (state.frames.length === 0) {
     const div = document.createElement('div');
     div.className = 'thumb empty';
@@ -1504,6 +2086,8 @@ function renderTimeline(scrollToActive = false) {
     const isViewing = isCurrent && state.viewMode === 'preview';
     const div = document.createElement('div');
     div.className = 'thumb' + (isCurrent ? ' current' : '') + (isViewing ? ' viewing' : '');
+    div.draggable = true;
+    div.dataset.index = i;
     div.innerHTML = `
       <img src="${f.thumbUrl}" alt="Cuadro ${i + 1}">
       <div class="num">${i + 1}</div>
@@ -1524,6 +2108,44 @@ function renderTimeline(scrollToActive = false) {
       }
     });
 
+    div.addEventListener('dragstart', (e) => {
+      state.dragSrcIndex = i;
+      div.classList.add('dragging');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(i));
+      }
+    });
+
+    div.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (state.dragSrcIndex === null || state.dragSrcIndex === i) return;
+      div.classList.toggle('drag-over-left', i < state.dragSrcIndex);
+      div.classList.toggle('drag-over-right', i > state.dragSrcIndex);
+    });
+
+    div.addEventListener('dragleave', () => {
+      div.classList.remove('drag-over-left', 'drag-over-right');
+    });
+
+    div.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      div.classList.remove('drag-over-left', 'drag-over-right');
+      const from = state.dragSrcIndex;
+      state.dragSrcIndex = null;
+      if (from !== null && from !== i) {
+        await moveFrame(from, i);
+        showToast(`Cuadro movido a posición ${i + 1}`);
+      }
+    });
+
+    div.addEventListener('dragend', () => {
+      state.dragSrcIndex = null;
+      document.querySelectorAll('.thumb').forEach(el => {
+        el.classList.remove('dragging', 'drag-over-left', 'drag-over-right');
+      });
+    });
+
     timelineStrip.appendChild(div);
   });
 
@@ -1536,10 +2158,12 @@ function updateStatus() {
   const idx = state.currentFrameIndex >= 0 ? state.currentFrameIndex + 1 : 0;
   $('chipFrame').textContent = `Cuadro ${idx}/${state.frames.length}`;
   $('chipFps').textContent = `${state.fps} FPS`;
+  $('chipRes').textContent = `${state.resTier}p`;
   $('fpsPillLabel').textContent = `${state.fps} FPS`;
   $('aspectPillLabel').textContent = ASPECT_LABELS[state.orient] || '16:9';
   const total = state.frames.length / state.fps;
   $('chipDur').textContent = `${total.toFixed(1)}s`;
+  updateEditButtonsState();
 }
 
 // ============================================================
@@ -1568,7 +2192,7 @@ async function saveProjectMeta() {
     name: state.projectName,
     fps: state.fps,
     orient: state.orient,
-    resWidth: state.resWidth,
+    resTier: state.resTier,
     fitMode: state.fitMode,
     onionEnabled: state.onionEnabled,
     onionOpacity: state.onionOpacity,
@@ -1590,14 +2214,14 @@ async function loadProject(id) {
   if (!meta) throw new Error('Proyecto no encontrado');
   state.projectId = meta.id;
   state.projectName = meta.name;
-  state.fps = meta.fps;
-  state.orient = meta.orient;
-  state.resWidth = meta.resWidth;
-  state.fitMode = meta.fitMode;
-  state.onionEnabled = meta.onionEnabled;
-  state.onionOpacity = meta.onionOpacity;
-  state.onionLayers = meta.onionLayers;
-  state.gridMode = meta.gridMode;
+  state.fps = FPS_OPTIONS.includes(meta.fps) ? meta.fps : 12;
+  state.orient = meta.orient || 'landscape';
+  state.resTier = normalizeLegacyResTier(meta.resTier ?? meta.resWidth ?? 1080);
+  state.fitMode = meta.fitMode || 'cover';
+  state.onionEnabled = !!meta.onionEnabled;
+  state.onionOpacity = meta.onionOpacity ?? 0.4;
+  state.onionLayers = meta.onionLayers ?? 1;
+  state.gridMode = meta.gridMode ?? 0;
   state.facingMode = meta.facingMode || 'environment';
   state._createdAt = meta.createdAt;
 
@@ -1638,7 +2262,7 @@ function applySettingsToUI() {
     b.classList.toggle('selected', b.dataset.orient === state.orient);
   });
   document.querySelectorAll('#resChips .chip-btn').forEach(b => {
-    b.classList.toggle('selected', parseInt(b.dataset.res) === state.resWidth);
+    b.classList.toggle('selected', parseInt(b.dataset.res, 10) === state.resTier);
   });
   $('fitMode').value = state.fitMode;
   $('onionOpacity').value = Math.round(state.onionOpacity * 100);
@@ -1650,6 +2274,7 @@ function applySettingsToUI() {
 }
 
 async function saveSettings() {
+  const prevRes = state.resTier;
   state.projectName = $('projName').value.trim() || 'Mi animación';
   state.fitMode = $('fitMode').value;
   state.onionOpacity = parseInt($('onionOpacity').value) / 100;
@@ -1658,8 +2283,11 @@ async function saveSettings() {
   applySettingsToUI();
   updateStatus();
   resizeCanvases();
+  if (prevRes !== state.resTier) {
+    await initCamera();
+  }
   closeModal('settingsModal');
-  showToast('Ajustes guardados');
+  showToast(`Ajustes guardados (${state.resTier}p)`);
 }
 
 async function renderProjectsList() {
@@ -1761,6 +2389,51 @@ $('loopBtn').addEventListener('click', () => {
   showToast(state.loop ? 'Bucle activado' : 'Bucle desactivado');
 });
 
+// Controles de edición de línea de tiempo (Paso 3)
+$('moveLeftBtn').addEventListener('click', async () => {
+  const idx = state.currentFrameIndex;
+  if (idx > 0) {
+    await moveFrame(idx, idx - 1);
+  }
+});
+
+$('moveRightBtn').addEventListener('click', async () => {
+  const idx = state.currentFrameIndex;
+  if (idx >= 0 && idx < state.frames.length - 1) {
+    await moveFrame(idx, idx + 1);
+  }
+});
+
+$('duplicateFrameBtn').addEventListener('click', () => {
+  repeatActiveFrame(1);
+});
+
+$('repeatFrameBtn').addEventListener('click', () => {
+  if (state.frames.length === 0) return;
+  pausePlayback();
+  const idx = state.currentFrameIndex >= 0 ? state.currentFrameIndex : state.frames.length - 1;
+  $('repeatFrameNum').textContent = idx + 1;
+  $('repeatCopiesInput').value = 1;
+  document.querySelectorAll('#repeatPresetChips .chip-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.copies === '1');
+  });
+  openModal('repeatModal');
+});
+
+document.querySelectorAll('#repeatPresetChips .chip-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#repeatPresetChips .chip-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    $('repeatCopiesInput').value = b.dataset.copies;
+  });
+});
+
+$('confirmRepeatBtn').addEventListener('click', async () => {
+  const n = Math.max(1, Math.min(60, parseInt($('repeatCopiesInput').value, 10) || 1));
+  closeModal('repeatModal');
+  await repeatActiveFrame(n);
+});
+
 $('cameraBtn').addEventListener('click', toggleCamera);
 
 $('onionBtn').addEventListener('click', async () => {
@@ -1814,9 +2487,9 @@ $('clearAllBtn').addEventListener('click', async () => {
 });
 
 $('fpsBtn').addEventListener('click', async () => {
-  const opts = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 24, 30];
-  const idx = opts.indexOf(state.fps);
-  state.fps = opts[(idx + 1) % opts.length];
+  const idx = FPS_OPTIONS.indexOf(state.fps);
+  state.fps = FPS_OPTIONS[(idx + 1) % FPS_OPTIONS.length];
+  $('exportFps').value = String(state.fps);
   updateStatus();
   await saveProjectMeta();
   showToast(`Velocidad: ${state.fps} FPS`);
@@ -1869,7 +2542,35 @@ $('exportBtn').addEventListener('click', () => {
     showToast('Capturá al menos un cuadro antes de exportar');
     return;
   }
+  $('exportFps').value = String(state.fps);
+  $('exportRes').value = String(state.resTier);
+  resetExportModalUI();
   openModal('exportModal');
+});
+
+// Controles del modal de exportación (Paso 4)
+document.querySelectorAll('#exportFormatChips .chip-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    if (state.exporting) return;
+    state.exportFormat = b.dataset.fmt;
+    document.querySelectorAll('#exportFormatChips .chip-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    $('exportHintText').textContent = state.exportFormat === 'mp4'
+      ? 'MP4 H.264 acelerado por hardware (WebCodecs), ideal para compartir en redes sociales y editores de video.'
+      : 'GIF animado compatible con cualquier navegador y mensajería. En 1080p con muchos cuadros puede tardar unos segundos.';
+  });
+});
+
+$('startExportBtn').addEventListener('click', runExport);
+
+$('cancelExportBtn').addEventListener('click', () => {
+  if (state.exporting) {
+    state.exportCancelled = true;
+    showToast('Cancelando exportación...');
+  } else {
+    closeModal('exportModal');
+    resetExportModalUI();
+  }
 });
 
 $('newProjectBtn').addEventListener('click', async () => {
@@ -1907,10 +2608,13 @@ document.querySelectorAll('#orientChips .chip-btn').forEach(b => {
 
 document.querySelectorAll('#resChips .chip-btn').forEach(b => {
   b.addEventListener('click', async () => {
-    state.resWidth = parseInt(b.dataset.res);
+    state.resTier = parseInt(b.dataset.res, 10);
     document.querySelectorAll('#resChips .chip-btn').forEach(x => x.classList.remove('selected'));
     b.classList.add('selected');
+    $('exportRes').value = String(state.resTier);
+    updateStatus();
     await saveProjectMeta();
+    await initCamera();
   });
 });
 
@@ -1928,7 +2632,7 @@ $('onionLayers').addEventListener('input', (e) => {
 
 document.querySelectorAll('.modal-backdrop').forEach(bd => {
   bd.addEventListener('click', (e) => {
-    if (e.target === bd) bd.style.display = 'none';
+    if (e.target === bd && !state.exporting) bd.style.display = 'none';
   });
 });
 
@@ -1943,6 +2647,9 @@ document.addEventListener('keydown', (e) => {
   } else if (e.code === 'KeyP') {
     e.preventDefault();
     togglePlayback();
+  } else if (e.code === 'KeyD') {
+    e.preventDefault();
+    repeatActiveFrame(1);
   } else if (e.code === 'ArrowLeft') {
     e.preventDefault();
     $('prevFrameBtn').click();
@@ -1990,6 +2697,8 @@ async function init() {
       await saveProjectMeta();
     }
 
+    $('exportFps').value = String(state.fps);
+    $('exportRes').value = String(state.resTier);
     applySettingsToUI();
     syncViewportDisplay();
     updateStatus();
