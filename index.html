@@ -127,7 +127,7 @@
     <div class="topbar-inner">
       <div class="brand">
         <span class="brand-badge">EPA</span>
-        <span style="font-weight: 700; font-size: 16px;">Suite de Animación</span>
+        <span class="brand-title">Suite de Animación</span>
       </div>
       <div class="topbar-actions">
         <button class="btn btn-sm btn-ghost" id="btnTheme" title="Cambiar tema" aria-label="Cambiar tema">
@@ -187,4 +187,18 @@ function applyTheme(theme) {
   if (btn && icon) {
     btn.title = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
     icon.innerHTML = isDark
-      ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3
+      ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>'
+      : '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+  }
+}
+
+document.getElementById('btnTheme').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+applyTheme(localStorage.getItem('epanimeitor-theme') || 'light');
+</script>
+
+</body>
+</html>
