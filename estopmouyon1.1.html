@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#141416">
+<title>Estopmouyon · EPA</title>
+<link rel="stylesheet" href="epa-theme.css">
+<style>
+  /* ==========================================================================
+     Estopmouyon · Estilos específicos de cámara, visor y controles
+     Complementa epa-theme.css (hereda variables de tema claro/oscuro)
+     ========================================================================== */
+  :root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  * { -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .app {
+    height: 100dvh;
+    min-height: 100dvh;
+    padding-top: var(--safe-top);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Barra superior compacta */
+  header.topbar .topbar-inner {
+    padding: 8px 14px;
+  }
+  .brand-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .brand-badge {
+    background: var(--accent-grad);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Área principal: Visor + Línea de tiempo */
+  .studio-main {
+    flex: 1;
+    min-height: 0;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 10px 14px calc(10px + var(--safe-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Stage de cámara / visor */
+  #stage {
+    flex: 1;
+    min-height: 160px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0d0d0f;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+
+  #aspectBox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  #video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(1);
+  }
+  #video.front { transform: scaleX(-1); }
+
+  #onionCanvas, #gridCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Barra de estado superior dentro del visor */
+  #statusBar {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 12;
+    pointer-events: none;
+  }
+  #statusChips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    pointer-events: auto;
+  }
+  .status-chip {
+    background: rgba(15, 15, 18, 0.72);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Botón flotante para ocultar/mostrar controles (siempre accesible dentro del visor) */
+  #toggleUiBtn {
+    pointer-events: auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(15, 15, 18, 0.75);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  #toggleUiBtn:hover {
+    background: rgba(15, 15, 18, 0.92);
+    border-color: var(--accent);
+  }
+  #toggleUiBtn.ui-hidden {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Dock de controles de captura (centrado y agrupado para PC y móvil) */
+  #captureBar {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 24px));
+    padding: 10px 14px;
+    border-radius: 18px;
+    background: rgba(18, 18, 22, 0.78);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  #captureBar.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 16px);
+  }
+
+  .cam-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #f3f2ee;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .cam-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .cam-btn:active {
+    transform: scale(0.94);
+  }
+  .cam-btn.active {
+    background: var(--accent-grad);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  }
+
+  #controlsRow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(12px, 3vw, 24px);
+  }
+
+  #captureBtn {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    transition: transform 0.1s;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  #captureBtn:hover { transform: scale(1.03); }
+  #captureBtn:active { transform: scale(0.93); }
+  #captureBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+  #captureBtn .inner {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--accent-grad);
+  }
+
+  #secondaryRow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .cam-pill {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #f3f2ee;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .cam-pill:hover { background: rgba(255, 255, 255, 0.18); }
+  .cam-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Línea de tiempo */
+  #timelinePanel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+  #timelineHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  #timelineHeader h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  #timelineStrip {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 2px;
+    min-height: 66px;
+    scrollbar-width: thin;
+  }
+  .thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 72px;
+    height: 58px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+  }
+  .thumb:hover { border-color: var(--muted); }
+  .thumb.current {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(255, 107, 107, 0.25);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .num {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+  .thumb.current .num { background: var(--accent); }
+  .thumb .del {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    border: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 12px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .thumb .del:hover { background: #ef5350; }
+  .thumb.empty {
+    width: auto;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-style: italic;
+    border: 1px dashed var(--border);
+    background: transparent;
+    cursor: default;
+  }
+
+  /* Modales adaptados a epa-theme.css */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: min(480px, 92vw);
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  }
+  .modal h2 {
+    margin: 0 0 16px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-row { margin-bottom: 14px; }
+  .form-row label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .form-row input[type="text"],
+  .form-row select {
+    width: 100%;
+    padding: 9px 10px;
+    background: var(--surface-subtle);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip-btn {
+    background: var(--surface-subtle);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .chip-btn:hover { background: var(--surface-hover); }
+  .chip-btn.selected {
+    background: var(--accent-grad);
+    color: #fff;
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Projects grid */
+  #projectsList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .project-card {
+    background: var(--surface-subtle);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .project-card:hover { border-color: var(--accent); }
+  .project-card .thumb-area {
+    aspect-ratio: 16/9;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+  }
+  .project-card .thumb-area img { width: 100%; height: 100%; object-fit: cover; }
+  .project-card .info { padding: 8px 10px; }
+  .project-card .info .name {
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .project-card .info .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .project-card .actions {
+    display: flex;
+    gap: 4px;
+    padding: 6px 8px;
+    border-top: 1px solid var(--border);
+  }
+  .project-card .actions button {
+    flex: 1;
+    padding: 5px;
+    font-size: 11px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .project-card .actions button:hover { background: var(--surface-hover); }
+
+  /* Banners de estado */
+  #errorBanner {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(520px, 92vw);
+    background: #ef5350;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    display: none;
+    z-index: 200;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    font-size: 13px;
+  }
+  #errorBanner.show { display: block; }
+  #errorBanner .close { float: right; cursor: pointer; margin-left: 10px; font-weight: 700; }
+
+  @media (max-width: 480px) {
+    .studio-main { padding: 6px 8px calc(6px + var(--safe-bottom)); gap: 6px; }
+    #captureBar { bottom: 8px; padding: 8px 10px; width: calc(100% - 16px); }
+    #captureBtn { width: 58px; height: 58px; }
+    #captureBtn .inner { width: 44px; height: 44px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-badge">EPA</span>
+        <span class="brand-title">Estopmouyon</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm" id="projectsBtn" title="Proyectos guardados">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          <span>Proyectos</span>
+        </button>
+        <button class="btn btn-sm" id="settingsBtn" title="Ajustes de proyecto">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+          <span>Ajustes</span>
+        </button>
+        <button class="btn btn-sm btn-primary" id="exportBtn" title="Exportar animación">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Exportar</span>
+        </button>
+        <button class="btn btn-sm btn-ghost" id="btnTheme" title="Cambiar tema" aria-label="Cambiar tema">
+          <svg id="iconTheme" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="studio-main">
+    <div id="stage">
+      <div id="statusBar">
+        <div id="statusChips">
+          <span class="status-chip" id="chipFrame">Cuadro 0/0</span>
+          <span class="status-chip" id="chipFps">12 FPS</span>
+          <span class="status-chip" id="chipDur">0.0s</span>
+        </div>
+        <button id="toggleUiBtn" title="Ocultar controles de cámara" aria-label="Ocultar controles de cámara">
+          <svg id="toggleUiIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+
+      <div id="aspectBox">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="onionCanvas"></canvas>
+        <canvas id="gridCanvas"></canvas>
+      </div>
+
+      <div id="captureBar">
+        <div id="controlsRow">
+          <button class="cam-btn" id="undoBtn" title="Deshacer última acción">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          </button>
+          <button class="cam-btn" id="cameraBtn" title="Cambiar cámara">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><circle cx="12" cy="12" r="3"/><path d="m18 22-3-3 3-3"/><path d="m6 2 3 3-3 3"/></svg>
+          </button>
+          <button id="captureBtn" title="Capturar cuadro (Espacio)">
+            <div class="inner"></div>
+          </button>
+          <button class="cam-btn" id="onionBtn" title="Papel cebolla (O)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </button>
+          <button class="cam-btn" id="gridBtn" title="Guía de encuadre (G)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          </button>
+        </div>
+
+        <div id="secondaryRow">
+          <button class="cam-pill" id="fpsBtn" title="Cambiar velocidad (FPS)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span id="fpsPillLabel">12 FPS</span>
+          </button>
+          <button class="cam-pill" id="aspectBtn" title="Cambiar relación de aspecto">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+            <span id="aspectPillLabel">16:9</span>
+          </button>
+          <button class="cam-pill" id="flashBtn" title="Flash / Linterna">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+            <span>Luz</span>
+          </button>
+          <button class="cam-pill" id="deleteLastBtn" title="Eliminar último cuadro">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Borrar últ.</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="timelinePanel">
+      <div id="timelineHeader">
+        <h3>Línea de tiempo</h3>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-sm" id="clearAllBtn">Limpiar todo</button>
+        </div>
+      </div>
+      <div id="timelineStrip"><div class="thumb empty">Capturá tu primer cuadro ↑</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Error banner -->
+<div id="errorBanner">
+  <span class="close" onclick="hideError()">×</span>
+  <span id="errorText"></span>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Projects modal -->
+<div class="modal-backdrop" id="projectsModal" style="display:none;">
+  <div class="modal">
+    <h2>Proyectos</h2>
+    <div class="form-row">
+      <button class="btn btn-primary" id="newProjectBtn" style="width:100%; justify-content:center;">+ Nuevo proyecto</button>
+    </div>
+    <div id="projectsList"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('projectsModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="settingsModal" style="display:none;">
+  <div class="modal">
+    <h2>Ajustes del proyecto</h2>
+    <div class="form-row">
+      <label>Nombre del proyecto</label>
+      <input type="text" id="projName" placeholder="Mi animación">
+    </div>
+    <div class="form-row">
+      <label>Orientación</label>
+      <div class="chips" id="orientChips">
+        <button class="chip-btn selected" data-orient="landscape">16:9 Horizontal</button>
+        <button class="chip-btn" data-orient="portrait">9:16 Vertical</button>
+        <button class="chip-btn" data-orient="square">1:1 Cuadrado</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Resolución máxima (ancho)</label>
+      <div class="chips" id="resChips">
+        <button class="chip-btn" data-res="480">480p</button>
+        <button class="chip-btn" data-res="640">640p</button>
+        <button class="chip-btn selected" data-res="854">854p</button>
+        <button class="chip-btn" data-res="1280">1280p</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Modo de captura (ajuste de cámara al formato)</label>
+      <select id="fitMode">
+        <option value="cover">Recortar (llenar)</option>
+        <option value="contain">Ajustar (bandas negras)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Papel cebolla — opacidad: <strong id="onionOpacityVal">40%</strong></label>
+      <input type="range" id="onionOpacity" min="0" max="100" value="40" style="width:100%;">
+    </div>
+    <div class="form-row">
+      <label>Papel cebolla — capas previas: <strong id="onionLayersVal">1</strong></label>
+      <input type="range" id="onionLayers" min="1" max="3" value="1" style="width:100%;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('settingsModal')">Cerrar</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export modal (base lista para el Paso 4) -->
+<div class="modal-backdrop" id="exportModal" style="display:none;">
+  <div class="modal">
+    <h2>Exportar animación</h2>
+    <div class="form-row">
+      <label>Formato</label>
+      <div class="chips">
+        <button class="chip-btn selected" data-fmt="mp4" id="fmtMp4">MP4 (H.264)</button>
+        <button class="chip-btn" data-fmt="gif" id="fmtGif">GIF animado</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>FPS de exportación</label>
+      <select id="exportFps">
+        <option>1</option><option>2</option><option>3</option><option>5</option>
+        <option>6</option><option selected>12</option><option>15</option><option>18</option><option>24</option><option>30</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Ancho de salida (px)</label>
+      <select id="exportWidth">
+        <option value="320">320 (ligero)</option>
+        <option value="480" selected>480</option>
+        <option value="640">640</option>
+        <option value="854">854</option>
+        <option value="1280">1280 (HD)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('exportModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// THEME (Modo claro / oscuro compartido con epa-theme.css)
+// ============================================================
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('epanimeitor-theme', isDark ? 'dark' : 'light');
+  const btn = document.getElementById('btnTheme');
+  const icon = document.getElementById('iconTheme');
+  if (btn && icon) {
+    btn.title = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+    icon.innerHTML = isDark
+      ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>'
+      : '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+  }
+}
+
+document.getElementById('btnTheme').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  stream: null,
+  facingMode: 'environment',
+  frames: [],
+  currentFrameIndex: -1,
+  fps: 12,
+  orient: 'landscape',
+  resWidth: 854,
+  fitMode: 'cover',
+  onionEnabled: false,
+  onionOpacity: 0.4,
+  onionLayers: 1,
+  gridMode: 0,
+  projectId: 'default',
+  projectName: 'Mi animación',
+  hideUi: false,
+  undoStack: [],
+  db: null,
+  capturing: false,
+  _createdAt: null,
+};
+
+const ASPECTS = {
+  landscape: 16 / 9,
+  portrait: 9 / 16,
+  square: 1,
+};
+
+const ASPECT_LABELS = {
+  landscape: '16:9',
+  portrait: '9:16',
+  square: '1:1',
+};
+
+// ============================================================
+// DOM
+// ============================================================
+const $ = (id) => document.getElementById(id);
+const video = $('video');
+const onionCanvas = $('onionCanvas');
+const gridCanvas = $('gridCanvas');
+const onionCtx = onionCanvas.getContext('2d');
+const gridCtx = gridCanvas.getContext('2d');
+const captureBtn = $('captureBtn');
+const timelineStrip = $('timelineStrip');
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function showError(msg) {
+  $('errorText').textContent = msg;
+  $('errorBanner').classList.add('show');
+  clearTimeout(window._errTimer);
+  window._errTimer = setTimeout(hideError, 8000);
+}
+function hideError() { $('errorBanner').classList.remove('show'); }
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ============================================================
+// INDEXEDDB
+// ============================================================
+const DB_NAME = 'stopmotion_db';
+const DB_VERSION = 1;
+const STORE_PROJECTS = 'projects';
+const STORE_FRAMES = 'frames';
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_PROJECTS)) {
+        db.createObjectStore(STORE_PROJECTS, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_FRAMES)) {
+        const store = db.createObjectStore(STORE_FRAMES, { keyPath: 'id' });
+        store.createIndex('projectId', 'projectId', { unique: false });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbSaveProject(proj) {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_PROJECTS], 'readwrite');
+    tx.objectStore(STORE_PROJECTS).put(proj);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function dbLoadProject(id) {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_PROJECTS], 'readonly');
+    const req = tx.objectStore(STORE_PROJECTS).get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbListProjects() {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_PROJECTS], 'readonly');
+    const req = tx.objectStore(STORE_PROJECTS).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbDeleteProject(id) {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_PROJECTS, STORE_FRAMES], 'readwrite');
+    tx.objectStore(STORE_PROJECTS).delete(id);
+    const idx = tx.objectStore(STORE_FRAMES).index('projectId');
+    idx.openCursor(IDBKeyRange.only(id)).onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (cursor) { cursor.delete(); cursor.continue(); }
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function dbSaveFrame(frame) {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_FRAMES], 'readwrite');
+    tx.objectStore(STORE_FRAMES).put(frame);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function dbLoadFrames(projectId) {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_FRAMES], 'readonly');
+    const idx = tx.objectStore(STORE_FRAMES).index('projectId');
+    const req = idx.getAll(IDBKeyRange.only(projectId));
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbDeleteFrame(id) {
+  return new Promise((resolve, reject) => {
+    const tx = state.db.transaction([STORE_FRAMES], 'readwrite');
+    tx.objectStore(STORE_FRAMES).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ============================================================
+// CAMERA & VIEWPORT SIZING
+// ============================================================
+async function initCamera() {
+  try {
+    if (state.stream) {
+      state.stream.getTracks().forEach(t => t.stop());
+      state.stream = null;
+    }
+    const constraints = {
+      video: {
+        facingMode: state.facingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    state.stream = stream;
+    video.srcObject = stream;
+    await new Promise(r => { video.onloadedmetadata = r; });
+    await video.play().catch(() => {});
+    video.classList.toggle('front', state.facingMode === 'user');
+    resizeCanvases();
+  } catch (e) {
+    if (e.name === 'NotAllowedError') {
+      showError('Permiso de cámara denegado. Habilitá el acceso en el navegador.');
+    } else if (e.name === 'NotFoundError' || e.name === 'OverconstrainedError') {
+      showError('No se encontró cámara disponible en este dispositivo.');
+    } else {
+      showError('Error de cámara: ' + e.message);
+    }
+  }
+}
+
+async function toggleCamera() {
+  state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
+  await initCamera();
+  await saveProjectMeta();
+}
+
+function resizeCanvases() {
+  const stage = $('stage');
+  const stageRect = stage.getBoundingClientRect();
+  if (!stageRect.width || !stageRect.height) return;
+
+  const aspect = ASPECTS[state.orient];
+  const padX = 24;
+  const padY = 24;
+  const availableW = Math.max(120, stageRect.width - padX);
+  const availableH = Math.max(120, stageRect.height - padY);
+
+  let boxW, boxH;
+  if (availableW / availableH > aspect) {
+    boxH = availableH;
+    boxW = boxH * aspect;
+  } else {
+    boxW = availableW;
+    boxH = boxW / aspect;
+  }
+
+  const box = $('aspectBox');
+  box.style.width = Math.round(boxW) + 'px';
+  box.style.height = Math.round(boxH) + 'px';
+
+  const cw = Math.round(boxW);
+  const ch = Math.round(boxH);
+  [onionCanvas, gridCanvas].forEach(c => {
+    c.width = cw;
+    c.height = ch;
+  });
+  drawGrid();
+  drawOnion();
+}
+
+// ============================================================
+// CAPTURE
+// ============================================================
+async function captureFrame() {
+  if (state.capturing) return;
+  state.capturing = true;
+  captureBtn.disabled = true;
+
+  try {
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (!vw || !vh) throw new Error('Cámara no lista');
+
+    const targetW = state.resWidth;
+    const targetH = Math.round(targetW / ASPECTS[state.orient]);
+
+    const tmp = document.createElement('canvas');
+    tmp.width = targetW;
+    tmp.height = targetH;
+    const tctx = tmp.getContext('2d');
+
+    if (state.facingMode === 'user') {
+      tctx.save();
+      tctx.translate(targetW, 0);
+      tctx.scale(-1, 1);
+    }
+
+    const srcAspect = vw / vh;
+    const dstAspect = targetW / targetH;
+    if (state.fitMode === 'cover') {
+      let sx, sy, sw, sh;
+      if (srcAspect > dstAspect) {
+        sh = vh; sw = vh * dstAspect;
+        sx = (vw - sw) / 2; sy = 0;
+      } else {
+        sw = vw; sh = vw / dstAspect;
+        sx = 0; sy = (vh - sh) / 2;
+      }
+      tctx.drawImage(video, sx, sy, sw, sh, 0, 0, targetW, targetH);
+    } else {
+      tctx.fillStyle = '#000';
+      tctx.fillRect(0, 0, targetW, targetH);
+      let dw, dh, dx, dy;
+      if (srcAspect > dstAspect) {
+        dw = targetW; dh = targetW / srcAspect;
+        dx = 0; dy = (targetH - dh) / 2;
+      } else {
+        dh = targetH; dw = targetH * srcAspect;
+        dx = (targetW - dw) / 2; dy = 0;
+      }
+      tctx.drawImage(video, dx, dy, dw, dh);
+    }
+
+    if (state.facingMode === 'user') {
+      tctx.restore();
+    }
+
+    const blob = await new Promise(res => tmp.toBlob(res, 'image/jpeg', 0.92));
+    const url = URL.createObjectURL(blob);
+
+    const thumbCanvas = document.createElement('canvas');
+    const thumbW = 128;
+    const thumbH = Math.round(thumbW / ASPECTS[state.orient]);
+    thumbCanvas.width = thumbW;
+    thumbCanvas.height = thumbH;
+    thumbCanvas.getContext('2d').drawImage(tmp, 0, 0, thumbW, thumbH);
+    const thumbBlob = await new Promise(res => thumbCanvas.toBlob(res, 'image/jpeg', 0.72));
+    const thumbUrl = URL.createObjectURL(thumbBlob);
+
+    const frame = {
+      id: 'f_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+      blob, url, thumbBlob, thumbUrl,
+      w: targetW, h: targetH,
+      capturedAt: Date.now(),
+      seqIndex: state.frames.length + 1,
+      projectId: state.projectId,
+    };
+
+    state.frames.push(frame);
+    state.currentFrameIndex = state.frames.length - 1;
+    await dbSaveFrame({
+      id: frame.id,
+      projectId: frame.projectId,
+      blob: frame.blob,
+      thumbBlob: frame.thumbBlob,
+      w: frame.w, h: frame.h,
+      capturedAt: frame.capturedAt,
+      seqIndex: frame.seqIndex,
+    });
+    await saveProjectMeta();
+
+    state.undoStack.push({ type: 'capture', frameId: frame.id });
+    updateStatus();
+    renderTimeline();
+    drawOnion();
+
+    if (navigator.vibrate) navigator.vibrate(40);
+  } catch (e) {
+    showError('No se pudo capturar: ' + e.message);
+  } finally {
+    state.capturing = false;
+    captureBtn.disabled = false;
+  }
+}
+
+async function deleteFrame(id) {
+  const idx = state.frames.findIndex(f => f.id === id);
+  if (idx < 0) return;
+  const snapshot = state.frames[idx];
+  state.frames.splice(idx, 1);
+  await dbDeleteFrame(id);
+  if (state.currentFrameIndex >= state.frames.length) {
+    state.currentFrameIndex = state.frames.length - 1;
+  }
+  state.undoStack.push({ type: 'delete', frame: snapshot, idx });
+  updateStatus();
+  renderTimeline();
+  drawOnion();
+  await saveProjectMeta();
+}
+
+async function undo() {
+  if (state.undoStack.length === 0) {
+    showToast('Nada para deshacer');
+    return;
+  }
+  const op = state.undoStack.pop();
+  if (op.type === 'capture') {
+    const idx = state.frames.findIndex(f => f.id === op.frameId);
+    if (idx >= 0) {
+      const f = state.frames[idx];
+      URL.revokeObjectURL(f.url);
+      URL.revokeObjectURL(f.thumbUrl);
+      state.frames.splice(idx, 1);
+      await dbDeleteFrame(op.frameId);
+      if (state.currentFrameIndex >= state.frames.length) {
+        state.currentFrameIndex = state.frames.length - 1;
+      }
+      updateStatus();
+      renderTimeline();
+      drawOnion();
+      await saveProjectMeta();
+      showToast('Captura deshecha');
+    }
+  } else if (op.type === 'delete' && op.frame) {
+    state.frames.splice(op.idx, 0, op.frame);
+    await dbSaveFrame({
+      id: op.frame.id,
+      projectId: op.frame.projectId,
+      blob: op.frame.blob,
+      thumbBlob: op.frame.thumbBlob,
+      w: op.frame.w, h: op.frame.h,
+      capturedAt: op.frame.capturedAt,
+      seqIndex: op.frame.seqIndex,
+    });
+    state.currentFrameIndex = op.idx;
+    updateStatus();
+    renderTimeline();
+    drawOnion();
+    await saveProjectMeta();
+    showToast('Cuadro restaurado');
+  }
+}
+
+// ============================================================
+// ONION SKIN & GRID
+// ============================================================
+async function drawOnion() {
+  onionCtx.clearRect(0, 0, onionCanvas.width, onionCanvas.height);
+  if (!state.onionEnabled || state.frames.length === 0 || state.currentFrameIndex < 0) return;
+
+  const layers = state.onionLayers;
+  const opacity = state.onionOpacity;
+  const start = Math.max(0, state.currentFrameIndex - layers + 1);
+  const prev = state.frames.slice(start, state.currentFrameIndex + 1).reverse();
+  if (prev.length === 0) return;
+
+  for (let i = 0; i < prev.length; i++) {
+    const f = prev[i];
+    const img = new Image();
+    img.src = f.url;
+    await new Promise(r => { img.onload = r; img.onerror = r; });
+    const layerOpacity = opacity * (1 - i / (layers + 1));
+    onionCtx.globalAlpha = layerOpacity;
+    onionCtx.drawImage(img, 0, 0, onionCanvas.width, onionCanvas.height);
+  }
+  onionCtx.globalAlpha = 1;
+}
+
+function drawGrid() {
+  const w = gridCanvas.width;
+  const h = gridCanvas.height;
+  gridCtx.clearRect(0, 0, w, h);
+  if (state.gridMode === 0) return;
+  gridCtx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+  gridCtx.lineWidth = 1;
+  if (state.gridMode === 1 || state.gridMode === 3) {
+    for (let i = 1; i < 3; i++) {
+      gridCtx.beginPath();
+      gridCtx.moveTo(w * i / 3, 0);
+      gridCtx.lineTo(w * i / 3, h);
+      gridCtx.stroke();
+      gridCtx.beginPath();
+      gridCtx.moveTo(0, h * i / 3);
+      gridCtx.lineTo(w, h * i / 3);
+      gridCtx.stroke();
+    }
+  }
+  if (state.gridMode === 2 || state.gridMode === 3) {
+    const cx = w / 2, cy = h / 2;
+    gridCtx.beginPath();
+    gridCtx.moveTo(cx - 20, cy);
+    gridCtx.lineTo(cx + 20, cy);
+    gridCtx.moveTo(cx, cy - 20);
+    gridCtx.lineTo(cx, cy + 20);
+    gridCtx.stroke();
+    const m = 0.1;
+    gridCtx.strokeRect(w * m, h * m, w * (1 - 2 * m), h * (1 - 2 * m));
+  }
+}
+
+// ============================================================
+// TIMELINE
+// ============================================================
+function renderTimeline() {
+  timelineStrip.innerHTML = '';
+  if (state.frames.length === 0) {
+    const div = document.createElement('div');
+    div.className = 'thumb empty';
+    div.textContent = 'Capturá tu primer cuadro ↑';
+    timelineStrip.appendChild(div);
+    return;
+  }
+  state.frames.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb' + (i === state.currentFrameIndex ? ' current' : '');
+    div.innerHTML = `
+      <img src="${f.thumbUrl}" alt="Cuadro ${i + 1}">
+      <div class="num">${i + 1}</div>
+      <button class="del" title="Eliminar cuadro">×</button>
+    `;
+    div.addEventListener('click', (e) => {
+      if (e.target.classList.contains('del')) return;
+      state.currentFrameIndex = i;
+      updateStatus();
+      renderTimeline();
+      drawOnion();
+    });
+    div.querySelector('.del').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (confirm(`¿Eliminar el cuadro ${i + 1}?`)) {
+        await deleteFrame(f.id);
+        showToast(`Cuadro ${i + 1} eliminado`);
+      }
+    });
+    timelineStrip.appendChild(div);
+  });
+  timelineStrip.scrollLeft = timelineStrip.scrollWidth;
+}
+
+function updateStatus() {
+  const idx = state.currentFrameIndex >= 0 ? state.currentFrameIndex + 1 : 0;
+  $('chipFrame').textContent = `Cuadro ${idx}/${state.frames.length}`;
+  $('chipFps').textContent = `${state.fps} FPS`;
+  $('fpsPillLabel').textContent = `${state.fps} FPS`;
+  $('aspectPillLabel').textContent = ASPECT_LABELS[state.orient] || '16:9';
+  const total = state.frames.length / state.fps;
+  $('chipDur').textContent = `${total.toFixed(1)}s`;
+}
+
+// ============================================================
+// TOGGLE CAPTURE CONTROLS (Ocultar / Mostrar controles)
+// ============================================================
+function setCaptureUiHidden(hidden) {
+  state.hideUi = hidden;
+  const bar = $('captureBar');
+  const btn = $('toggleUiBtn');
+  const icon = $('toggleUiIcon');
+  bar.classList.toggle('hidden', hidden);
+  btn.classList.toggle('ui-hidden', hidden);
+  btn.title = hidden ? 'Mostrar controles de cámara' : 'Ocultar controles de cámara';
+  btn.setAttribute('aria-label', btn.title);
+  icon.innerHTML = hidden
+    ? '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>'
+    : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+// ============================================================
+// PROJECTS & SETTINGS
+// ============================================================
+async function saveProjectMeta() {
+  const meta = {
+    id: state.projectId,
+    name: state.projectName,
+    fps: state.fps,
+    orient: state.orient,
+    resWidth: state.resWidth,
+    fitMode: state.fitMode,
+    onionEnabled: state.onionEnabled,
+    onionOpacity: state.onionOpacity,
+    onionLayers: state.onionLayers,
+    gridMode: state.gridMode,
+    facingMode: state.facingMode,
+    modifiedAt: Date.now(),
+    createdAt: state._createdAt || Date.now(),
+    frameCount: state.frames.length,
+  };
+  state._createdAt = meta.createdAt;
+  await dbSaveProject(meta);
+  localStorage.setItem('lastProjectId', state.projectId);
+}
+
+async function loadProject(id) {
+  const meta = await dbLoadProject(id);
+  if (!meta) throw new Error('Proyecto no encontrado');
+  state.projectId = meta.id;
+  state.projectName = meta.name;
+  state.fps = meta.fps;
+  state.orient = meta.orient;
+  state.resWidth = meta.resWidth;
+  state.fitMode = meta.fitMode;
+  state.onionEnabled = meta.onionEnabled;
+  state.onionOpacity = meta.onionOpacity;
+  state.onionLayers = meta.onionLayers;
+  state.gridMode = meta.gridMode;
+  state.facingMode = meta.facingMode || 'environment';
+  state._createdAt = meta.createdAt;
+
+  state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
+  state.frames = [];
+  state.currentFrameIndex = -1;
+
+  const framesData = await dbLoadFrames(id);
+  framesData.sort((a, b) => a.seqIndex - b.seqIndex);
+  for (const fd of framesData) {
+    const url = URL.createObjectURL(fd.blob);
+    const thumbUrl = URL.createObjectURL(fd.thumbBlob);
+    state.frames.push({
+      id: fd.id, blob: fd.blob, url,
+      thumbBlob: fd.thumbBlob, thumbUrl,
+      w: fd.w, h: fd.h,
+      capturedAt: fd.capturedAt,
+      seqIndex: fd.seqIndex,
+      projectId: fd.projectId,
+    });
+  }
+  state.currentFrameIndex = state.frames.length - 1;
+
+  applySettingsToUI();
+  updateStatus();
+  renderTimeline();
+  drawOnion();
+  localStorage.setItem('lastProjectId', id);
+}
+
+function openModal(id) { $(id).style.display = 'flex'; }
+function closeModal(id) { $(id).style.display = 'none'; }
+
+function applySettingsToUI() {
+  $('projName').value = state.projectName;
+  document.querySelectorAll('#orientChips .chip-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.orient === state.orient);
+  });
+  document.querySelectorAll('#resChips .chip-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.res) === state.resWidth);
+  });
+  $('fitMode').value = state.fitMode;
+  $('onionOpacity').value = Math.round(state.onionOpacity * 100);
+  $('onionOpacityVal').textContent = Math.round(state.onionOpacity * 100) + '%';
+  $('onionLayers').value = state.onionLayers;
+  $('onionLayersVal').textContent = state.onionLayers;
+  $('onionBtn').classList.toggle('active', state.onionEnabled);
+  $('gridBtn').classList.toggle('active', state.gridMode > 0);
+}
+
+async function saveSettings() {
+  state.projectName = $('projName').value.trim() || 'Mi animación';
+  state.fitMode = $('fitMode').value;
+  state.onionOpacity = parseInt($('onionOpacity').value) / 100;
+  state.onionLayers = parseInt($('onionLayers').value);
+  await saveProjectMeta();
+  applySettingsToUI();
+  updateStatus();
+  resizeCanvases();
+  closeModal('settingsModal');
+  showToast('Ajustes guardados');
+}
+
+async function renderProjectsList() {
+  const list = await dbListProjects();
+  list.sort((a, b) => (b.modifiedAt || 0) - (a.modifiedAt || 0));
+  const container = $('projectsList');
+  container.innerHTML = '';
+  if (list.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px; grid-column:1/-1;">No hay proyectos guardados</div>';
+    return;
+  }
+  for (const p of list) {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    const frames = await dbLoadFrames(p.id);
+    frames.sort((a, b) => a.seqIndex - b.seqIndex);
+    let thumbHtml = '<span>Sin cuadros</span>';
+    if (frames.length > 0 && frames[0].thumbBlob) {
+      const url = URL.createObjectURL(frames[0].thumbBlob);
+      thumbHtml = `<img src="${url}" alt="">`;
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+    const safeName = document.createElement('div');
+    safeName.textContent = p.name;
+    card.innerHTML = `
+      <div class="thumb-area">${thumbHtml}</div>
+      <div class="info">
+        <div class="name">${safeName.innerHTML}</div>
+        <div class="meta">${new Date(p.modifiedAt).toLocaleDateString()} · ${p.frameCount || 0} cuadros</div>
+      </div>
+      <div class="actions">
+        <button data-act="open">Abrir</button>
+        <button data-act="del">Borrar</button>
+      </div>
+    `;
+    card.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (btn.dataset.act === 'open') {
+          await loadProject(p.id);
+          await initCamera();
+          closeModal('projectsModal');
+          showToast(`Proyecto abierto: ${p.name}`);
+        } else if (btn.dataset.act === 'del') {
+          if (confirm(`¿Eliminar "${p.name}"?`)) {
+            await dbDeleteProject(p.id);
+            await renderProjectsList();
+            showToast('Proyecto eliminado');
+          }
+        }
+      });
+    });
+    container.appendChild(card);
+  }
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+captureBtn.addEventListener('click', () => {
+  captureBtn.blur(); // Evita doble disparo al usar Barra Espaciadora
+  captureFrame();
+});
+
+$('toggleUiBtn').addEventListener('click', () => {
+  setCaptureUiHidden(!state.hideUi);
+});
+
+$('cameraBtn').addEventListener('click', toggleCamera);
+
+$('onionBtn').addEventListener('click', async () => {
+  state.onionEnabled = !state.onionEnabled;
+  $('onionBtn').classList.toggle('active', state.onionEnabled);
+  drawOnion();
+  await saveProjectMeta();
+});
+
+$('gridBtn').addEventListener('click', async () => {
+  state.gridMode = (state.gridMode + 1) % 4;
+  $('gridBtn').classList.toggle('active', state.gridMode > 0);
+  drawGrid();
+  await saveProjectMeta();
+});
+
+$('undoBtn').addEventListener('click', undo);
+
+$('deleteLastBtn').addEventListener('click', async () => {
+  if (state.frames.length === 0) {
+    showToast('No hay cuadros para eliminar');
+    return;
+  }
+  if (!confirm('¿Eliminar el último cuadro?')) return;
+  const last = state.frames[state.frames.length - 1];
+  await deleteFrame(last.id);
+  showToast('Último cuadro eliminado');
+});
+
+$('clearAllBtn').addEventListener('click', async () => {
+  if (state.frames.length === 0) {
+    showToast('No hay cuadros para limpiar');
+    return;
+  }
+  if (!confirm(`¿Eliminar TODOS los ${state.frames.length} cuadros?`)) return;
+  const ids = state.frames.map(f => f.id);
+  state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
+  state.frames = [];
+  state.currentFrameIndex = -1;
+  state.undoStack = [];
+  for (const id of ids) await dbDeleteFrame(id);
+  await saveProjectMeta();
+  setCaptureUiHidden(false);
+  updateStatus();
+  renderTimeline();
+  drawOnion();
+  showToast('Línea de tiempo vacía');
+});
+
+$('fpsBtn').addEventListener('click', async () => {
+  const opts = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 24, 30];
+  const idx = opts.indexOf(state.fps);
+  state.fps = opts[(idx + 1) % opts.length];
+  updateStatus();
+  await saveProjectMeta();
+  showToast(`Velocidad: ${state.fps} FPS`);
+});
+
+$('aspectBtn').addEventListener('click', async () => {
+  const opts = ['landscape', 'portrait', 'square'];
+  const idx = opts.indexOf(state.orient);
+  state.orient = opts[(idx + 1) % opts.length];
+  applySettingsToUI();
+  updateStatus();
+  requestAnimationFrame(() => resizeCanvases());
+  await saveProjectMeta();
+  showToast(`Aspecto: ${ASPECT_LABELS[state.orient]}`);
+});
+
+$('flashBtn').addEventListener('click', async () => {
+  try {
+    const track = state.stream?.getVideoTracks()[0];
+    if (!track) { showToast('Cámara no activa'); return; }
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if ('torch' in caps) {
+      const cur = track.getSettings().torch || false;
+      await track.applyConstraints({ advanced: [{ torch: !cur }] });
+      $('flashBtn').classList.toggle('active', !cur);
+      showToast(`Luz ${!cur ? 'encendida' : 'apagada'}`);
+    } else {
+      showToast('Este dispositivo no soporta linterna');
+    }
+  } catch (e) {
+    showError('No se pudo cambiar la luz: ' + e.message);
+  }
+});
+
+$('projectsBtn').addEventListener('click', async () => {
+  await renderProjectsList();
+  openModal('projectsModal');
+});
+
+$('settingsBtn').addEventListener('click', () => {
+  applySettingsToUI();
+  openModal('settingsModal');
+});
+
+$('exportBtn').addEventListener('click', () => {
+  if (state.frames.length === 0) {
+    showToast('Capturá al menos un cuadro antes de exportar');
+    return;
+  }
+  openModal('exportModal');
+});
+
+$('newProjectBtn').addEventListener('click', async () => {
+  const name = prompt('Nombre del proyecto:', 'Mi animación');
+  if (name === null) return;
+  state.projectId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  state.projectName = name.trim() || 'Mi animación';
+  state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
+  state.frames = [];
+  state.currentFrameIndex = -1;
+  state.undoStack = [];
+  state._createdAt = Date.now();
+  await saveProjectMeta();
+  applySettingsToUI();
+  updateStatus();
+  renderTimeline();
+  drawOnion();
+  setCaptureUiHidden(false);
+  closeModal('projectsModal');
+  showToast(`Nuevo proyecto: ${state.projectName}`);
+});
+
+document.querySelectorAll('#orientChips .chip-btn').forEach(b => {
+  b.addEventListener('click', async () => {
+    state.orient = b.dataset.orient;
+    document.querySelectorAll('#orientChips .chip-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    updateStatus();
+    await saveProjectMeta();
+    requestAnimationFrame(() => resizeCanvases());
+  });
+});
+
+document.querySelectorAll('#resChips .chip-btn').forEach(b => {
+  b.addEventListener('click', async () => {
+    state.resWidth = parseInt(b.dataset.res);
+    document.querySelectorAll('#resChips .chip-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    await saveProjectMeta();
+  });
+});
+
+$('onionOpacity').addEventListener('input', (e) => {
+  state.onionOpacity = parseInt(e.target.value) / 100;
+  $('onionOpacityVal').textContent = e.target.value + '%';
+  drawOnion();
+});
+
+$('onionLayers').addEventListener('input', (e) => {
+  state.onionLayers = parseInt(e.target.value);
+  $('onionLayersVal').textContent = e.target.value;
+  drawOnion();
+});
+
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', (e) => {
+    if (e.target === bd) bd.style.display = 'none';
+  });
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+  const anyModalOpen = Array.from(document.querySelectorAll('.modal-backdrop')).some(m => m.style.display === 'flex');
+  if (anyModalOpen) return;
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    captureFrame();
+  } else if (e.code === 'KeyO') {
+    $('onionBtn').click();
+  } else if (e.code === 'KeyG') {
+    $('gridBtn').click();
+  } else if (e.code === 'Escape' && state.hideUi) {
+    setCaptureUiHidden(false);
+  }
+});
+
+window.addEventListener('resize', resizeCanvases);
+video.addEventListener('loadedmetadata', resizeCanvases);
+video.addEventListener('playing', resizeCanvases);
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  applyTheme(localStorage.getItem('epanimeitor-theme') || 'dark');
+  try {
+    state.db = await openDb();
+    const lastId = localStorage.getItem('lastProjectId');
+    if (lastId) {
+      try {
+        await loadProject(lastId);
+      } catch (e) {
+        state.projectId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        state.projectName = 'Mi animación';
+        state._createdAt = Date.now();
+        await saveProjectMeta();
+      }
+    } else {
+      state.projectId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      state.projectName = 'Mi animación';
+      state._createdAt = Date.now();
+      await saveProjectMeta();
+    }
+
+    applySettingsToUI();
+    updateStatus();
+    renderTimeline();
+    setCaptureUiHidden(false);
+    await initCamera();
+  } catch (e) {
+    showError('No se pudo inicializar: ' + e.message);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

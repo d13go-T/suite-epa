@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#141416">
+<title>Suite EPA · Herramientas de Animación</title>
+<link rel="stylesheet" href="epa-theme.css">
+<style>
+  .menu-container {
+    flex: 1;
+    max-width: 880px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 32px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .menu-intro {
+    text-align: center;
+  }
+
+  .menu-intro h1 {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .menu-intro p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .apps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .app-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .app-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+  }
+
+  .app-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-grad);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .app-card h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .version-tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .app-card p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+    flex: 1;
+  }
+
+  .app-card .btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  .brand-badge {
+    background: var(--accent-grad);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-badge">EPA</span>
+        <span style="font-weight: 700; font-size: 16px;">Suite de Animación</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm btn-ghost" id="btnTheme" title="Cambiar tema" aria-label="Cambiar tema">
+          <svg id="iconTheme" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="menu-container">
+    <div class="menu-intro">
+      <h1>Herramientas de Animación</h1>
+      <p>Elegí la aplicación con la que querés trabajar</p>
+    </div>
+
+    <div class="apps-grid">
+      <a class="app-card" href="epanimeitor1.0.html">
+        <div class="app-card-header">
+          <div class="app-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+          </div>
+          <span class="version-tag">v1.0</span>
+        </div>
+        <div>
+          <h2>Epanimeitor</h2>
+        </div>
+        <p>Animación 2D cuadro a cuadro, dibujo directo, papel cebolla y línea de tiempo para ejercicios y secuencias.</p>
+        <span class="btn btn-primary">Abrir Epanimeitor</span>
+      </a>
+
+      <a class="app-card" href="estopmouyon1.1.html">
+        <div class="app-card-header">
+          <div class="app-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          </div>
+          <span class="version-tag">v1.1</span>
+        </div>
+        <div>
+          <h2>Estopmouyon</h2>
+        </div>
+        <p>Captura stop-motion con cámara en celular o PC, guías de encuadre, papel cebolla multicapa y exportación.</p>
+        <span class="btn btn-primary">Abrir Estopmouyon</span>
+      </a>
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('epanimeitor-theme', isDark ? 'dark' : 'light');
+  const btn = document.getElementById('btnTheme');
+  const icon = document.getElementById('iconTheme');
+  if (btn && icon) {
+    btn.title = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+    icon.innerHTML = isDark
+      ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3

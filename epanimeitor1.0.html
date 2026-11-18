@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<!-- version original: https://gabrielyuvone.github.io/epanimeitor/ -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Epanimeitor 1.0 · Animador de GIFs</title>
+<meta name="description" content="Crea animaciones frame a frame y exportalas como GIF. Simple, colorido y gratuito. Escuela para Animadores Rosario.">
+
+<link rel="stylesheet" href="epa-theme.css">
+
+</head>
+<body>
+<div class="app">
+  <!-- ====== TOP BAR ====== -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+	  <!-- LOGO_EPANIMEITOR -->
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm" id="btnNew" title="Nueva animación">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span>Nuevo</span>
+        </button>
+        <button class="btn btn-sm" id="btnSave" title="Guardar proyecto (.epa)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Guardar</span>
+        </button>
+        <button class="btn btn-sm" id="btnLoad" title="Cargar proyecto (.epa)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <span>Cargar</span>
+        </button>
+        <button class="btn btn-sm btn-success" id="btnExport" title="Exportar GIF animado">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>GIF</span>
+        </button>
+		<button class="btn btn-sm btn-ghost" id="btnTheme" title="Cambiar a modo oscuro" aria-label="Cambiar tema">
+          <svg id="iconTheme" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+        </button>
+        <button class="btn btn-sm btn-ghost" id="btnHelp" title="Ayuda y atajos">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span>Ayuda</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====== MAIN ====== -->
+  <main>
+    <!-- Left tool rail -->
+    <aside class="toolrail" id="toolrail"><button class="tool-btn active" title="Lápiz (1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg><span class="key">1</span></button><button class="tool-btn" title="Pincel (2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"></path><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"></path></svg><span class="key">2</span></button><button class="tool-btn" title="Borrador (3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path><path d="M22 21H7"></path><path d="m5 11 9 9"></path></svg><span class="key">3</span></button><button class="tool-btn" title="Línea (4)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"></line></svg><span class="key">4</span></button><button class="tool-btn" title="Rectángulo (5)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg><span class="key">5</span></button><button class="tool-btn" title="Círculo (6)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg><span class="key">6</span></button><button class="tool-btn" title="Relleno (7)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="m5 2 5 5"></path><path d="m2 13 15 15"></path><path d="m3 7 15 15"></path></svg><span class="key">7</span></button><div class="toolrail-divider"></div><button class="tool-btn" title="Deshacer (Ctrl+Z)" disabled=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg></button><button class="tool-btn" title="Rehacer (Ctrl+Shift+Z)" disabled=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 15-6.7L21 13"></path></svg></button></aside>
+
+    <!-- Canvas + playback + timeline -->
+    <section class="canvas-area">
+      <div class="canvas-card">
+        <div class="canvas-wrap" id="canvasWrap" style="background: rgb(255, 255, 255);">
+          <canvas id="drawCanvas" width="600" height="450"></canvas>
+          <canvas id="previewCanvas" width="600" height="450" class="preview"></canvas>
+          <div class="canvas-badge">600 × 450</div>
+        </div>
+      </div>
+
+      <div class="playback">
+        <button class="btn btn-icon btn-ghost" id="btnPrev" title="Fotograma anterior (J)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
+        </button>
+        <button class="btn btn-primary" id="btnPlay">
+          <svg id="iconPlay" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span id="playLabel">Reproducir</span>
+        </button>
+        <button class="btn btn-icon btn-ghost" id="btnNext" title="Fotograma siguiente (K)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg>
+        </button>
+        <div class="frame-info">Fotograma <b id="curFrameNum">1</b> / <span id="totalFrames">8</span></div>
+        <div class="fps-control">
+          <label>FPS</label>
+          <input type="range" id="fpsSlider" min="1" max="24" value="8">
+          <span class="fps-val" id="fpsVal">8</span>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-header">
+          <div class="timeline-title" id="timelineTitle">Línea de tiempo · 8 fotograma(s)</div>
+          <div class="timeline-actions">
+            <button class="btn btn-sm btn-ghost" id="btnClear" title="Limpiar fotograma actual">Limpiar</button>
+            <button class="btn btn-sm btn-ghost" id="btnFirst" title="Marcar como primero" disabled="">1º</button>
+            <button class="btn btn-sm btn-ghost" id="btnUp" title="Mover izquierda" disabled="">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </button>
+            <button class="btn btn-sm btn-ghost" id="btnDown" title="Mover derecha">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <button class="btn btn-sm btn-ghost" id="btnDelete" title="Borrar fotograma" style="color:#dc2626">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+            <button class="btn btn-sm btn-ghost" id="btnDuplicate" title="Duplicar fotograma (D)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+            <button class="btn btn-sm btn-primary" id="btnAdd">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Fotograma</span>
+            </button>
+          </div>
+        </div>
+        <div class="frames-list" id="framesList"><div class="frame-thumb active"><canvas width="68" height="68"></canvas><span class="num">1</span></div><div class="frame-thumb"><canvas width="68" height="68"></canvas><span class="num">2</span></div><div class="frame-thumb"><canvas width="68" height="68"></canvas><span class="num">3</span></div><div class="frame-thumb"><canvas width="68" height="68"></canvas><span class="num">4</span></div><div class="frame-thumb"><canvas width="68" height="68"></canvas><span class="num">5</span></div><div class="frame-thumb"><canvas width="68" height="68"></canvas><span class="num">6</span></div><div class="frame-thumb"><canvas width="68" height="68"></canvas><span class="num">7</span></div><div class="frame-thumb"><canvas width="68" height="68"></canvas><span class="num">8</span></div><button class="add-frame-btn" title="Añadir fotograma"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button></div>
+      </div>
+    </section>
+
+    <!-- Right panel -->
+    <aside class="right-panel">
+      <div class="panel">
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>
+          Color
+        </div>
+        <div class="palette-grid" id="paletteGrid"><div class="palette-swatch" title="#1a1a1a" style="background: rgb(26, 26, 26);"></div><div class="palette-swatch" title="#FFFFFF" style="background: rgb(255, 255, 255);"></div><div class="palette-swatch" title="#888888" style="background: rgb(136, 136, 136);"></div><div class="palette-swatch active" title="#FF6B6B" style="background: rgb(255, 107, 107);"></div><div class="palette-swatch" title="#FFA94D" style="background: rgb(255, 169, 77);"></div><div class="palette-swatch" title="#FFD93D" style="background: rgb(255, 217, 61);"></div><div class="palette-swatch" title="#6BCB77" style="background: rgb(107, 203, 119);"></div><div class="palette-swatch" title="#4D96FF" style="background: rgb(77, 150, 255);"></div><div class="palette-swatch" title="#9B59B6" style="background: rgb(155, 89, 182);"></div><div class="palette-swatch" title="#FF6FB5" style="background: rgb(255, 111, 181);"></div><div class="palette-swatch" title="#FFB6C1" style="background: rgb(255, 182, 193);"></div><div class="palette-swatch" title="#87CEEB" style="background: rgb(135, 206, 235);"></div><div class="palette-swatch" title="#98FB98" style="background: rgb(152, 251, 152);"></div><div class="palette-swatch" title="#DDA0DD" style="background: rgb(221, 160, 221);"></div><div class="palette-swatch" title="#F5DEB3" style="background: rgb(245, 222, 179);"></div><div class="palette-swatch" title="#2C2C2C" style="background: rgb(44, 44, 44);"></div></div>
+        <div class="current-color">
+          <div class="current-color-swatch" id="currentColorSwatch" style="background: rgb(255, 107, 107);"></div>
+          <div class="current-color-info">
+            <div class="label">Color actual</div>
+            <div class="hex" id="currentColorHex">#FF6B6B</div>
+          </div>
+        </div>
+        <button class="color-picker-toggle" id="colorPickerToggle">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"></path><path d="m5 2 5 5"></path><path d="m2 13 15 15"></path><path d="m3 7 15 15"></path></svg>
+          Color personalizado
+        </button>
+        <div class="color-picker-area" id="colorPickerArea" style="display:none">
+          <input type="color" id="customColorInput" value="#FF6B6B">
+          <input type="text" id="customColorText" value="#FF6B6B">
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"></path><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"></path></svg>
+          Pincel
+        </div>
+        <div class="brush-row">
+          <div class="brush-preview">
+            <div class="brush-dot" id="brushDot" style="background: rgb(255, 107, 107); width: 8px; height: 8px;"></div>
+          </div>
+          <div class="brush-control">
+            <div class="row"><span>Tamaño</span><b><span id="brushVal">8</span>px</b></div>
+            <input type="range" id="brushSlider" min="1" max="50" value="8">
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>
+          Fondo
+        </div>
+        <div class="bg-presets" id="bgPresets"><div class="bg-swatch active" title="#FFFFFF" style="background: rgb(255, 255, 255);"></div><div class="bg-swatch" title="#FFF8E7" style="background: rgb(255, 248, 231);"></div><div class="bg-swatch" title="#E0F7FA" style="background: rgb(224, 247, 250);"></div><div class="bg-swatch" title="#FCE4EC" style="background: rgb(252, 228, 236);"></div><div class="bg-swatch" title="#F1F8E9" style="background: rgb(241, 248, 233);"></div><div class="bg-swatch" title="#FFF3E0" style="background: rgb(255, 243, 224);"></div><div class="bg-swatch" title="#EDE7F6" style="background: rgb(237, 231, 246);"></div><div class="bg-swatch" title="#ECEFF1" style="background: rgb(236, 239, 241);"></div><div class="bg-swatch" title="#1a1a1a" style="background: rgb(26, 26, 26);"></div></div>
+        <div class="bg-current-row">
+          <input type="color" id="bgColorInput" value="#FFFFFF">
+          <span class="hex" id="bgColorHex">#FFFFFF</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          Onion Skin
+        </div>
+        <div class="onion-row">
+          <label class="switch">
+            <input type="checkbox" id="onionToggle">
+            <span class="slider"></span>
+          </label>
+          <label class="onion-label" for="onionToggle">Ver fotograma anterior</label>
+        </div>
+        <div class="onion-desc">Muestra el fotograma previo semitransparente para ayudarte a animar con fluidez.</div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ====== FOOTER ====== -->
+  <footer>
+    <div class="footer-inner">
+	<!-- LOGO_ESCUELA_PARA_ANIMADORES -->
+      <div class="footer-text">
+        <div><b>Epanimeitor</b> · animador frame a frame</div>
+        <div>Escuela para Animadores · Rosario · Hecho con cariño</div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ====== HELP DIALOG ====== -->
+<dialog id="helpDialog">
+  <div class="dialog-content" style="position:relative">
+    <button class="dialog-close" id="dialogClose" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+    <div class="dialog-header">
+	<!-- LOGO_EPANIMEITOR -->
+    </div>
+    <div class="dialog-body">
+      <p><kbd>Espacio</kbd> – Reproducir / pausar</p>
+      <p><kbd>N</kbd> – Nuevo fotograma · <kbd>D</kbd> – Duplicar · <kbd>O</kbd> – Onion skin</p>
+      <p><kbd>J</kbd> / <kbd>K</kbd> – Fotograma anterior / siguiente</p>
+      <p><kbd>1</kbd>–<kbd>7</kbd> – Seleccionar herramienta</p>
+      <p><kbd>Ctrl/Cmd + Z</kbd> – Deshacer · <kbd>Ctrl/Cmd + Shift + Z</kbd> – Rehacer</p>
+      <p><kbd>Ctrl/Cmd + S</kbd> – Guardar · <kbd>Ctrl/Cmd + E</kbd> – Exportar GIF</p>
+      <hr>
+      <p class="tip">Tip: activá <b>onion skin</b> para ver el fotograma anterior en transparente y animar con más precisión.</p>
+      <div class="dialog-footer-logo">
+	  <!-- LOGO_ESCUELA_PARA_ANIMADORES -->
+        <span>Escuela para Animadores · Rosario</span>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast">Proyecto cargado</div>
+<input type="file" id="fileInput" class="hidden-input" accept=".epa,.json,application/json">
+
+<script type="module">
+// ====== gifenc inline (ESM) ======
+var X={signature:"GIF",version:"89a",trailer:59,extensionIntroducer:33,applicationExtensionLabel:255,graphicControlExtensionLabel:249,imageSeparator:44,signatureSize:3,versionSize:3,globalColorTableFlagMask:128,colorResolutionMask:112,sortFlagMask:8,globalColorTableSizeMask:7,applicationIdentifierSize:8,applicationAuthCodeSize:3,disposalMethodMask:28,userInputFlagMask:2,transparentColorFlagMask:1,localColorTableFlagMask:128,interlaceFlagMask:64,idSortFlagMask:32,localColorTableSizeMask:7};function F(t=256){let e=0,s=new Uint8Array(t);return{get buffer(){return s.buffer},reset(){e=0},bytesView(){return s.subarray(0,e)},bytes(){return s.slice(0,e)},writeByte(r){n(e+1),s[e]=r,e++},writeBytes(r,o=0,i=r.length){n(e+i);for(let c=0;c<i;c++)s[e++]=r[c+o]},writeBytesView(r,o=0,i=r.byteLength){n(e+i),s.set(r.subarray(o,o+i),e),e+=i}};function n(r){var o=s.length;if(o>=r)return;var i=1024*1024;r=Math.max(r,o*(o<i?2:1.125)>>>0),o!=0&&(r=Math.max(r,256));let c=s;s=new Uint8Array(r),e>0&&s.set(c.subarray(0,e),0)}}var O=12,J=5003,lt=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function at(t,e,s,n,r=F(512),o=new Uint8Array(256),i=new Int32Array(J),c=new Int32Array(J)){let x=i.length,a=Math.max(2,n);o.fill(0),c.fill(0),i.fill(-1);let l=0,f=0,g=a+1,h=g,b=!1,w=h,_=(1<<w)-1,u=1<<g-1,k=u+1,B=u+2,p=0,A=s[0],z=0;for(let y=x;y<65536;y*=2)++z;z=8-z,r.writeByte(a),I(u);let d=s.length;for(let y=1;y<d;y++){t:{let m=s[y],v=(m<<O)+A,M=m<<z^A;if(i[M]===v){A=c[M];break t}let V=M===0?1:x-M;for(;i[M]>=0;)if(M-=V,M<0&&(M+=x),i[M]===v){A=c[M];break t}I(A),A=m,B<1<<O?(c[M]=B++,i[M]=v):(i.fill(-1),B=u+2,b=!0,I(u))}}return I(A),I(k),r.writeByte(0),r.bytesView();function I(y){for(l&=lt[f],f>0?l|=y<<f:l=y,f+=w;f>=8;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;if((B>_||b)&&(b?(w=h,_=(1<<w)-1,b=!1):(++w,_=w===O?1<<w:(1<<w)-1)),y==k){for(;f>0;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;p>0&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0)}}}var $=at;function D(t,e,s){return t<<8&63488|e<<2&992|s>>3}function G(t,e,s,n){return t>>4|e&240|(s&240)<<4|(n&240)<<8}function j(t,e,s){return t>>4<<8|e&240|s>>4}function R(t,e,s){return t<e?e:t>s?s:t}function T(t){return t*t}function tt(t,e,s){var n=0,r=1e100;let o=t[e],i=o.cnt,c=o.ac,x=o.rc,a=o.gc,l=o.bc;for(var f=o.fw;f!=0;f=t[f].fw){let h=t[f],b=h.cnt,w=i*b/(i+b);if(!(w>=r)){var g=0;s&&(g+=w*T(h.ac-c),g>=r)||(g+=w*T(h.rc-x),!(g>=r)&&(g+=w*T(h.gc-a),!(g>=r)&&(g+=w*T(h.bc-l),!(g>=r)&&(r=g,n=f))))}}o.err=r,o.nn=n}function Q(){return{ac:0,rc:0,gc:0,bc:0,cnt:0,nn:0,fw:0,bk:0,tm:0,mtm:0,err:0}}function ut(t,e){let s=e==="rgb444"?4096:65536,n=new Array(s),r=t.length;if(e==="rgba4444")for(let o=0;o<r;++o){let i=t[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255,f=G(l,a,x,c),g=f in n?n[f]:n[f]=Q();g.rc+=l,g.gc+=a,g.bc+=x,g.ac+=c,g.cnt++}else if(e==="rgb444")for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=j(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}else for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=D(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}return n}function H(t,e,s={}){let{format:n="rgb565",clearAlpha:r=!0,clearAlphaColor:o=0,clearAlphaThreshold:i=0,oneBitAlpha:c=!1}=s;if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");let x=new Uint32Array(t.buffer),a=s.useSqrt!==!1,l=n==="rgba4444",f=ut(x,n),g=f.length,h=g-1,b=new Uint32Array(g+1);for(var w=0,u=0;u<g;++u){let C=f[u];if(C!=null){var _=1/C.cnt;l&&(C.ac*=_),C.rc*=_,C.gc*=_,C.bc*=_,f[w++]=C}}T(e)/w<.022&&(a=!1);for(var u=0;u<w-1;++u)f[u].fw=u+1,f[u+1].bk=u,a&&(f[u].cnt=Math.sqrt(f[u].cnt));a&&(f[u].cnt=Math.sqrt(f[u].cnt));var k,B,p;for(u=0;u<w;++u){tt(f,u,!1);var A=f[u].err;for(B=++b[0];B>1&&(p=B>>1,!(f[k=b[p]].err<=A));B=p)b[B]=k;b[B]=u}var z=w-e;for(u=0;u<z;){for(var d;;){var I=b[1];if(d=f[I],d.tm>=d.mtm&&f[d.nn].mtm<=d.tm)break;d.mtm==h?I=b[1]=b[b[0]--]:(tt(f,I,!1),d.tm=u);var A=f[I].err;for(B=1;(p=B+B)<=b[0]&&(p<b[0]&&f[b[p]].err>f[b[p+1]].err&&p++,!(A<=f[k=b[p]].err));B=p)b[B]=k;b[B]=I}var y=f[d.nn],m=d.cnt,v=y.cnt,_=1/(m+v);l&&(d.ac=_*(m*d.ac+v*y.ac)),d.rc=_*(m*d.rc+v*y.rc),d.gc=_*(m*d.gc+v*y.gc),d.bc=_*(m*d.bc+v*y.bc),d.cnt+=y.cnt,d.mtm=++u,f[y.bk].fw=y.fw,f[y.fw].bk=y.bk,y.mtm=h}let M=[];var V=0;for(u=0;;++V){let L=R(Math.round(f[u].rc),0,255),C=R(Math.round(f[u].gc),0,255),Y=R(Math.round(f[u].bc),0,255),E=255;if(l){if(E=R(Math.round(f[u].ac),0,255),c){let st=typeof c=="number"?c:127;E=E<=st?0:255}r&&E<=i&&(L=C=Y=o,E=0)}let K=l?[L,C,Y,E]:[L,C,Y];if(xt(M,K)||M.push(K),(u=f[u].fw)==0)break}return M}function xt(t,e){for(let s=0;s<t.length;s++){let n=t[s],r=n[0]===e[0]&&n[1]===e[1]&&n[2]===e[2],o=n.length>=4&&e.length>=4?n[3]===e[3]:!0;if(r&&o)return!0}return!1}function U(t,e){var s=0,n;for(n=0;n<t.length;n++){let r=t[n]-e[n];s+=r*r}return s}function P(t,e){return e>1?Math.round(t/e)*e:t}function et(t,{roundRGB:e=5,roundAlpha:s=10,oneBitAlpha:n=null}={}){let r=new Uint32Array(t.buffer);for(let o=0;o<r.length;o++){let i=r[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255;if(c=P(c,s),n){let f=typeof n=="number"?n:127;c=c<=f?0:255}l=P(l,e),a=P(a,e),x=P(x,e),r[o]=c<<24|x<<16|a<<8|l<<0}}function nt(t,e,s="rgb565"){if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");if(e.length>256)throw new Error("applyPalette() only works with 256 colors or less");let n=new Uint32Array(t.buffer),r=n.length,o=s==="rgb444"?4096:65536,i=new Uint8Array(r),c=new Array(o),x=s==="rgba4444";if(s==="rgba4444")for(let a=0;a<r;a++){let l=n[a],f=l>>24&255,g=l>>16&255,h=l>>8&255,b=l&255,w=G(b,h,g,f),_=w in c?c[w]:c[w]=gt(b,h,g,f,e);i[a]=_}else{let a=s==="rgb444"?j:D;for(let l=0;l<r;l++){let f=n[l],g=f>>16&255,h=f>>8&255,b=f&255,w=a(b,h,g),_=w in c?c[w]:c[w]=bt(b,h,g,e);i[l]=_}}return i}function gt(t,e,s,n,r){let o=0,i=1e100;for(let c=0;c<r.length;c++){let x=r[c],a=x[3],l=q(a-n);if(l>i)continue;let f=x[0];if(l+=q(f-t),l>i)continue;let g=x[1];if(l+=q(g-e),l>i)continue;let h=x[2];l+=q(h-s),!(l>i)&&(i=l,o=c)}return o}function bt(t,e,s,n){let r=0,o=1e100;for(let i=0;i<n.length;i++){let c=n[i],x=c[0],a=q(x-t);if(a>o)continue;let l=c[1];if(a+=q(l-e),a>o)continue;let f=c[2];a+=q(f-s),!(a>o)&&(o=a,r=i)}return r}function rt(t,e,s=5){if(!t.length||!e.length)return;let n=t.map(i=>i.slice(0,3)),r=s*s,o=t[0].length;for(let i=0;i<e.length;i++){let c=e[i];c.length<o?c=[c[0],c[1],c[2],255]:c.length>o?c=c.slice(0,3):c=c.slice();let x=N(n,c.slice(0,3),U),a=x[0],l=x[1];l>0&&l<=r&&(t[a]=c)}}function q(t){return t*t}function W(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return r}function N(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return[r,n]}function ot(t,e,s=U){return t[W(t,e,s)]}function ct(t={}){let{initialCapacity:e=4096,auto:s=!0}=t,n=F(e),r=5003,o=new Uint8Array(256),i=new Int32Array(r),c=new Int32Array(r),x=!1;return{reset(){n.reset(),x=!1},finish(){n.writeByte(X.trailer)},bytes(){return n.bytes()},bytesView(){return n.bytesView()},get buffer(){return n.buffer},get stream(){return n},writeHeader:a,writeFrame(l,f,g,h={}){let{transparent:b=!1,transparentIndex:w=0,delay:_=0,palette:u=null,repeat:k=0,colorDepth:B=8,dispose:p=-1}=h,A=!1;if(s?x||(A=!0,a(),x=!0):A=Boolean(h.first),f=Math.max(0,Math.floor(f)),g=Math.max(0,Math.floor(g)),A){if(!u)throw new Error("First frame must include a { palette } option");pt(n,f,g,u,B),it(n,u),k>=0&&dt(n,k)}let z=Math.round(_/10);wt(n,p,z,b,w);let d=Boolean(u)&&!A;ht(n,f,g,d?u:null),d&&it(n,u),yt(n,l,f,g,B,o,i,c)}};function a(){ft(n,"GIF89a")}}function wt(t,e,s,n,r){t.writeByte(33),t.writeByte(249),t.writeByte(4),r<0&&(r=0,n=!1);var o,i;n?(o=1,i=2):(o=0,i=0),e>=0&&(i=e&7),i<<=2;let c=0;t.writeByte(0|i|c|o),S(t,s),t.writeByte(r||0),t.writeByte(0)}function pt(t,e,s,n,r=8){let o=1,i=0,c=Z(n.length)-1,x=o<<7|r-1<<4|i<<3|c,a=0,l=0;S(t,e),S(t,s),t.writeBytes([x,a,l])}function dt(t,e){t.writeByte(33),t.writeByte(255),t.writeByte(11),ft(t,"NETSCAPE2.0"),t.writeByte(3),t.writeByte(1),S(t,e),t.writeByte(0)}function it(t,e){let s=1<<Z(e.length);for(let n=0;n<s;n++){let r=[0,0,0];n<e.length&&(r=e[n]),t.writeByte(r[0]),t.writeByte(r[1]),t.writeByte(r[2])}}function ht(t,e,s,n){if(t.writeByte(44),S(t,0),S(t,0),S(t,e),S(t,s),n){let r=0,o=0,i=Z(n.length)-1;t.writeByte(128|r|o|0|i)}else t.writeByte(0)}function yt(t,e,s,n,r=8,o,i,c){$(s,n,e,r,t,o,i,c)}function S(t,e){t.writeByte(e&255),t.writeByte(e>>8&255)}function ft(t,e){for(var s=0;s<e.length;s++)t.writeByte(e.charCodeAt(s))}function Z(t){return Math.max(Math.ceil(Math.log2(t)),1)}var Bt=ct;const GIFEncoder=ct;const applyPalette=nt;const quantize=H;const prequantize=et;const nearestColor=ot;const nearestColorIndex=W;const nearestColorIndexWithDistance=N;const snapColorsToPalette=rt;
+//# sourceMappingURL=gifenc.esm.js.map
+
+
+// ====== Epanimeitor app ======
+const CANVAS_W = 600;
+const CANVAS_H = 450;
+const DEFAULT_PALETTE = ['#1a1a1a','#FFFFFF','#888888','#FF6B6B','#FFA94D','#FFD93D','#6BCB77','#4D96FF','#9B59B6','#FF6FB5','#FFB6C1','#87CEEB','#98FB98','#DDA0DD','#F5DEB3','#2C2C2C'];
+const BG_PRESETS = ['#FFFFFF','#FFF8E7','#E0F7FA','#FCE4EC','#F1F8E9','#FFF3E0','#EDE7F6','#ECEFF1','#1a1a1a'];
+
+const TOOLS = [
+  { id:'pencil', label:'Lápiz', key:'1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>' },
+  { id:'brush', label:'Pincel', key:'2', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>' },
+  { id:'eraser', label:'Borrador', key:'3', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>' },
+  { id:'line', label:'Línea', key:'4', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/></svg>' },
+  { id:'rectangle', label:'Rectángulo', key:'5', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>' },
+  { id:'circle', label:'Círculo', key:'6', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>' },
+  { id:'fill', label:'Relleno', key:'7', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 4-8 8 6 6 8-8Z"/><path d="m10 3 8 8"/><path d="M6 9C4 7 5 3.5 8 3.5c1.5 0 2.5 1 3 1.5"/><path d="M19.5 13.5a1.5 1.5 0 0 1-3 0c0-1.1 1.5-2.5 1.5-2.5s1.5 1.4 1.5 2.5Z"/></svg>' },
+];
+
+// State
+let state = {
+  frames: [{ id: uid(), data: emptyFrame(), duration: 100 }],
+  currentIdx: 0,
+  tool: 'pencil',
+  color: '#1a1a1a',
+  brushSize: 8,
+  bgColor: '#FFFFFF',
+  fps: 8,
+  onionSkin: false,
+  isPlaying: false,
+undoStack: [],
+  redoStack: [],
+  customColor: '#FF6B6B',
+  projectName: 'sin titulo',
+};
+
+const drawCanvas = document.getElementById('drawCanvas');
+const previewCanvas = document.getElementById('previewCanvas');
+const drawCtx = drawCanvas.getContext('2d');
+const previewCtx = previewCanvas.getContext('2d');
+
+let isDrawing = false;
+let lastPoint = null;
+let lastRadius = 0;
+let startPoint = null;
+
+function uid() {
+  return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+}
+function emptyFrame() {
+  const c = document.createElement('canvas');
+  c.width = CANVAS_W; c.height = CANVAS_H;
+  return c.toDataURL('image/png');
+}
+function loadImage(src) {
+  return new Promise((resolve,reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+let playTimer = null;
+
+// ====== Tool rail ======
+function renderToolRail() {
+  const rail = document.getElementById('toolrail');
+  rail.innerHTML = '';
+  TOOLS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tool-btn' + (state.tool === t.id ? ' active' : '');
+    btn.title = `${t.label} (${t.key})`;
+    btn.innerHTML = t.icon + `<span class="key">${t.key}</span>`;
+    btn.addEventListener('click', () => { state.tool = t.id; renderToolRail(); });
+    rail.appendChild(btn);
+  });
+  const div = document.createElement('div');
+  div.className = 'toolrail-divider';
+  rail.appendChild(div);
+  // Undo
+  const undoBtn = document.createElement('button');
+  undoBtn.className = 'tool-btn';
+  undoBtn.title = 'Deshacer (Ctrl+Z)';
+  undoBtn.disabled = state.undoStack.length === 0;
+  undoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>';
+  undoBtn.addEventListener('click', undo);
+  rail.appendChild(undoBtn);
+  // Redo
+  const redoBtn = document.createElement('button');
+  redoBtn.className = 'tool-btn';
+  redoBtn.title = 'Rehacer (Ctrl+Shift+Z)';
+  redoBtn.disabled = state.redoStack.length === 0;
+  redoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg>';
+  redoBtn.addEventListener('click', redo);
+  rail.appendChild(redoBtn);
+}
+
+// ====== Palette ======
+function renderPalette() {
+  const grid = document.getElementById('paletteGrid');
+  grid.innerHTML = '';
+  DEFAULT_PALETTE.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'palette-swatch' + (state.color === c ? ' active' : '');
+    sw.style.background = c;
+    sw.title = c;
+    sw.addEventListener('click', () => { state.color = c; renderPalette(); updateColorDisplay(); });
+    grid.appendChild(sw);
+  });
+}
+function updateColorDisplay() {
+  document.getElementById('currentColorSwatch').style.background = state.color;
+  document.getElementById('currentColorHex').textContent = state.color.toUpperCase();
+  document.getElementById('brushDot').style.background = state.color;
+}
+
+// ====== Background presets ======
+function renderBgPresets() {
+  const grid = document.getElementById('bgPresets');
+  grid.innerHTML = '';
+  BG_PRESETS.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'bg-swatch' + (state.bgColor === c ? ' active' : '');
+    sw.style.background = c;
+    sw.title = c;
+    sw.addEventListener('click', () => { state.bgColor = c; updateBgDisplay(); renderFrames(); loadCurrentFrame(); });
+    grid.appendChild(sw);
+  });
+}
+function updateBgDisplay() {
+  document.getElementById('bgColorInput').value = state.bgColor;
+  document.getElementById('bgColorHex').textContent = state.bgColor.toUpperCase();
+  document.getElementById('canvasWrap').style.background = state.bgColor;
+}
+
+// ====== Canvas drawing ======
+function getPos(e) {
+  const rect = drawCanvas.getBoundingClientRect();
+  return {
+    x: ((e.clientX - rect.left) / rect.width) * CANVAS_W,
+    y: ((e.clientY - rect.top) / rect.height) * CANVAS_H
+  };
+}
+
+function getStrokeRadius(e) {
+  const base = state.brushSize;
+  if (state.tool === 'pencil') {
+    // Trazo uniforme, fino y sin sensibilidad a la presión
+    return Math.max(0.5, (base * 0.55) / 2);
+  }
+  if (state.tool === 'eraser') {
+    return Math.max(0.5, base / 2);
+  }
+  // Pincel: sensible a la presión
+  let factor = 1;
+  if (e.pointerType === 'pen') {
+    factor = 0.08 + 0.92 * Math.max(0, Math.min(1, e.pressure));
+  } else if (e.pointerType === 'touch') {
+    // Algunos dispositivos móviles reportan presión real; otros envían 0 o 0.5 fijo
+    if (e.pressure > 0 && e.pressure !== 0.5 && e.pressure !== 1) {
+      factor = 0.12 + 0.88 * Math.min(1, e.pressure);
+    }
+  }
+  return Math.max(0.4, (base * factor) / 2);
+}
+
+function hexToRgba(hex) {
+  hex = hex.replace('#','');
+  if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+  return {
+    r: parseInt(hex.slice(0,2),16)||0,
+    g: parseInt(hex.slice(2,4),16)||0,
+    b: parseInt(hex.slice(4,6),16)||0,
+    a: 255,
+  };
+}
+
+function floodFill(ctx, sx, sy, fillColor) {
+  sx = Math.round(sx);
+  sy = Math.round(sy);
+  if (sx < 0 || sy < 0 || sx >= CANVAS_W || sy >= CANVAS_H) return;
+  const imgData = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H);
+  const data = imgData.data;
+  const startIdx = (sy * CANVAS_W + sx) * 4;
+  const startR = data[startIdx], startG = data[startIdx + 1], startB = data[startIdx + 2], startA = data[startIdx + 3];
+  const fill = hexToRgba(fillColor);
+  if (startR === fill.r && startG === fill.g && startB === fill.b && startA === fill.a) return;
+
+  const totalPixels = CANVAS_W * CANVAS_H;
+  const visited = new Uint8Array(totalPixels);
+  const filled = new Uint8Array(totalPixels);
+  const stack = [[sx, sy]];
+  const tol = 80;
+
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    if (x < 0 || y < 0 || x >= CANVAS_W || y >= CANVAS_H) continue;
+    const pIdx = y * CANVAS_W + x;
+    if (visited[pIdx]) continue;
+    visited[pIdx] = 1;
+
+    const idx = pIdx * 4;
+    if (
+      Math.abs(data[idx] - startR) > tol ||
+      Math.abs(data[idx + 1] - startG) > tol ||
+      Math.abs(data[idx + 2] - startB) > tol ||
+      Math.abs(data[idx + 3] - startA) > tol
+    ) continue;
+
+    data[idx] = fill.r;
+    data[idx + 1] = fill.g;
+    data[idx + 2] = fill.b;
+    data[idx + 3] = fill.a;
+    filled[pIdx] = 1;
+
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+
+  // Expande 2 píxeles por debajo del borde suavizado para eliminar el reborde blanco
+  for (let pass = 0; pass < 2; pass++) {
+    const borderPixels = [];
+    for (let y = 0; y < CANVAS_H; y++) {
+      for (let x = 0; x < CANVAS_W; x++) {
+        const pIdx = y * CANVAS_W + x;
+        if (filled[pIdx]) continue;
+        const hasFilledNeighbor =
+          (x > 0 && filled[pIdx - 1]) ||
+          (x < CANVAS_W - 1 && filled[pIdx + 1]) ||
+          (y > 0 && filled[pIdx - CANVAS_W]) ||
+          (y < CANVAS_H - 1 && filled[pIdx + CANVAS_W]);
+        if (hasFilledNeighbor) borderPixels.push(pIdx);
+      }
+    }
+    for (let i = 0; i < borderPixels.length; i++) {
+      const pIdx = borderPixels[i];
+      const idx = pIdx * 4;
+      const a = data[idx + 3] / 255;
+      if (startA < 128) {
+        if (a < 0.98) {
+          data[idx] = Math.round(data[idx] * a + fill.r * (1 - a));
+          data[idx + 1] = Math.round(data[idx + 1] * a + fill.g * (1 - a));
+          data[idx + 2] = Math.round(data[idx + 2] * a + fill.b * (1 - a));
+          data[idx + 3] = 255;
+          filled[pIdx] = 1;
+        }
+      } else if (pass === 0) {
+        const diff =
+          Math.abs(data[idx] - startR) +
+          Math.abs(data[idx + 1] - startG) +
+          Math.abs(data[idx + 2] - startB);
+        if (diff < 380) {
+          data[idx] = fill.r;
+          data[idx + 1] = fill.g;
+          data[idx + 2] = fill.b;
+          data[idx + 3] = 255;
+          filled[pIdx] = 1;
+        }
+      }
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function drawDot(ctx, p, radius) {
+  ctx.save();
+  if (state.tool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = state.color;
+  }
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawVariableSegment(ctx, p1, r1, p2, r2) {
+  ctx.save();
+  if (state.tool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = state.color;
+    ctx.strokeStyle = state.color;
+  }
+
+  // Para lápiz y borrador (radio constante), trazo vectorial continuo
+  if (state.tool === 'pencil' || state.tool === 'eraser') {
+    ctx.lineWidth = r2 * 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  // Para pincel (radio variable por presión), unión tangente suave entre r1 y r2
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const dist = Math.hypot(dx, dy);
+
+  if (dist > 0.01) {
+    const nx = -dy / dist;
+    const ny = dx / dist;
+    ctx.beginPath();
+    ctx.moveTo(p1.x + nx * r1, p1.y + ny * r1);
+    ctx.lineTo(p2.x + nx * r2, p2.y + ny * r2);
+    ctx.lineTo(p2.x - nx * r2, p2.y - ny * r2);
+    ctx.lineTo(p1.x - nx * r1, p1.y - ny * r1);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.beginPath();
+  ctx.arc(p2.x, p2.y, r2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  drawCanvas.setPointerCapture(e.pointerId);
+  pushUndo();
+  renderToolRail();
+
+  isDrawing = true;
+  const p = getPos(e);
+  const r = getStrokeRadius(e);
+  lastPoint = p;
+  lastRadius = r;
+  startPoint = p;
+
+  if (state.tool === 'fill') {
+    floodFill(drawCtx, p.x, p.y, state.color);
+    isDrawing = false;
+    commitFrame();
+    return;
+  }
+  if (state.tool === 'pencil' || state.tool === 'brush' || state.tool === 'eraser') {
+    drawDot(drawCtx, p, r);
+  }
+}
+
+function onPointerMove(e) {
+  if (!isDrawing) return;
+  const p = getPos(e);
+  if (state.tool === 'pencil' || state.tool === 'brush' || state.tool === 'eraser') {
+    const r = getStrokeRadius(e);
+    if (lastPoint) {
+      drawVariableSegment(drawCtx, lastPoint, lastRadius, p, r);
+    }
+    lastPoint = p;
+    lastRadius = r;
+  } else {
+    // shape preview on previewCanvas
+    previewCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+    if (state.onionSkin && state.currentIdx > 0) drawOnionSkin();
+    previewCtx.save();
+    previewCtx.strokeStyle = state.color;
+    previewCtx.lineWidth = state.brushSize;
+    previewCtx.lineCap = 'round';
+    previewCtx.lineJoin = 'round';
+    const sp = startPoint;
+    if (state.tool === 'line') {
+      previewCtx.beginPath();
+      previewCtx.moveTo(sp.x, sp.y);
+      previewCtx.lineTo(p.x, p.y);
+      previewCtx.stroke();
+    } else if (state.tool === 'rectangle') {
+      previewCtx.strokeRect(Math.min(sp.x,p.x), Math.min(sp.y,p.y), Math.abs(p.x-sp.x), Math.abs(p.y-sp.y));
+    } else if (state.tool === 'circle') {
+      const cx = (sp.x+p.x)/2, cy = (sp.y+p.y)/2;
+      const rx = Math.abs(p.x-sp.x)/2, ry = Math.abs(p.y-sp.y)/2;
+      previewCtx.beginPath();
+      previewCtx.ellipse(cx, cy, Math.max(1,rx), Math.max(1,ry), 0, 0, Math.PI*2);
+      previewCtx.stroke();
+    }
+    previewCtx.restore();
+  }
+}
+
+function onPointerUp(e) {
+  if (!isDrawing) return;
+  isDrawing = false;
+  try { drawCanvas.releasePointerCapture(e.pointerId); } catch(_) {}
+  if (state.tool === 'line' || state.tool === 'rectangle' || state.tool === 'circle') {
+    drawCtx.drawImage(previewCanvas, 0, 0);
+    previewCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+    if (state.onionSkin && state.currentIdx > 0) drawOnionSkin();
+  }
+  lastPoint = null;
+  lastRadius = 0;
+  startPoint = null;
+  commitFrame();
+}
+
+function commitFrame() {
+  const dataUrl = drawCanvas.toDataURL('image/png');
+  state.frames[state.currentIdx] = { ...state.frames[state.currentIdx], data: dataUrl };
+  renderFrames();
+}
+
+// ====== Load current frame ======
+async function loadCurrentFrame() {
+  const f = state.frames[state.currentIdx];
+  if (!f) return;
+  drawCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  if (f.data) {
+    try {
+      const img = await loadImage(f.data);
+      drawCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+    } catch(_) {}
+  }
+  // redraw onion skin if enabled
+  previewCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  if (state.onionSkin && state.currentIdx > 0) drawOnionSkin();
+}
+
+function drawOnionSkin() {
+  if (state.currentIdx === 0) return;
+  const prev = state.frames[state.currentIdx - 1];
+  if (!prev || !prev.data) return;
+  loadImage(prev.data).then(img => {
+    previewCtx.save();
+    previewCtx.globalAlpha = 0.3;
+    previewCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+    previewCtx.restore();
+  });
+}
+
+// ====== Frames ======
+function renderFrames() {
+  const list = document.getElementById('framesList');
+  list.innerHTML = '';
+  state.frames.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'frame-thumb' + (i === state.currentIdx ? ' active' : '');
+    const canvas = document.createElement('canvas');
+    canvas.width = 68; canvas.height = 68;
+    const ctx = canvas.getContext('2d');
+    // fill bg
+    if (state.bgColor !== 'transparent') {
+      ctx.fillStyle = state.bgColor;
+      ctx.fillRect(0,0,68,68);
+    }
+    if (f.data) {
+      loadImage(f.data).then(img => {
+        // fit
+        const r = img.width / img.height;
+        let w = 68, h = 68;
+        if (r > 1) h = 68/r; else w = 68*r;
+        ctx.drawImage(img, (68-w)/2, (68-h)/2, w, h);
+      });
+    }
+    const num = document.createElement('span');
+    num.className = 'num';
+    num.textContent = i+1;
+    div.appendChild(canvas);
+    div.appendChild(num);
+    div.addEventListener('click', () => {
+      state.isPlaying = false;
+      state.currentIdx = i;
+      loadCurrentFrame();
+      renderFrames();
+      updateUI();
+    });
+    list.appendChild(div);
+  });
+  // add button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-frame-btn';
+  addBtn.title = 'Añadir fotograma';
+  addBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  addBtn.addEventListener('click', addFrame);
+  list.appendChild(addBtn);
+  updateUI();
+}
+
+function pushUndo() {
+  state.undoStack.push(state.frames.map(f => ({...f})));
+  if (state.undoStack.length > 30) state.undoStack.shift();
+  state.redoStack = [];
+}
+function undo() {
+  if (state.undoStack.length === 0) return;
+  state.redoStack.push(state.frames.map(f => ({...f})));
+  state.frames = state.undoStack.pop();
+  state.currentIdx = Math.min(state.currentIdx, state.frames.length-1);
+  loadCurrentFrame();
+  renderToolRail(); renderFrames();
+}
+function redo() {
+  if (state.redoStack.length === 0) return;
+  state.undoStack.push(state.frames.map(f => ({...f})));
+  state.frames = state.redoStack.pop();
+  state.currentIdx = Math.min(state.currentIdx, state.frames.length-1);
+  loadCurrentFrame();
+  renderToolRail(); renderFrames();
+}
+
+function addFrame() {
+  pushUndo();
+  const newF = { id: uid(), data: emptyFrame(), duration: 100 };
+  state.frames.splice(state.currentIdx+1, 0, newF);
+  state.currentIdx++;
+  loadCurrentFrame();
+  renderFrames();
+}
+function duplicateFrame() {
+  pushUndo();
+  const cur = state.frames[state.currentIdx];
+  const newF = { id: uid(), data: cur.data, duration: cur.duration };
+  state.frames.splice(state.currentIdx+1, 0, newF);
+  state.currentIdx++;
+  loadCurrentFrame();
+  renderFrames();
+}
+function deleteFrame() {
+  if (state.frames.length <= 1) return;
+  pushUndo();
+  state.frames.splice(state.currentIdx, 1);
+  state.currentIdx = Math.max(0, Math.min(state.currentIdx, state.frames.length-1));
+  loadCurrentFrame();
+  renderFrames();
+}
+function clearFrame() {
+  pushUndo();
+  state.frames[state.currentIdx] = { ...state.frames[state.currentIdx], data: emptyFrame() };
+  loadCurrentFrame();
+  renderFrames();
+}
+function moveFrame(dir) {
+  const target = state.currentIdx + dir;
+  if (target < 0 || target >= state.frames.length) return;
+  pushUndo();
+  [state.frames[state.currentIdx], state.frames[target]] = [state.frames[target], state.frames[state.currentIdx]];
+  state.currentIdx = target;
+  loadCurrentFrame();
+  renderFrames();
+}
+function setAsFirst() {
+  if (state.currentIdx === 0) return;
+  pushUndo();
+  const [f] = state.frames.splice(state.currentIdx, 1);
+  state.frames.unshift(f);
+  state.currentIdx = 0;
+  loadCurrentFrame();
+  renderFrames();
+}
+
+// ====== Playback ======
+function togglePlay() {
+  if (state.frames.length < 2) return;
+  state.isPlaying = !state.isPlaying;
+  updatePlayButton();
+  if (state.isPlaying) scheduleNextFrame();
+  else if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+}
+function scheduleNextFrame() {
+  if (!state.isPlaying) return;
+  const delay = Math.max(20, Math.round(1000 / state.fps));
+  playTimer = setTimeout(() => {
+    state.currentIdx = (state.currentIdx + 1) % state.frames.length;
+    loadCurrentFrame();
+    renderFrames();
+    scheduleNextFrame();
+  }, delay);
+}
+function updatePlayButton() {
+  const btn = document.getElementById('btnPlay');
+  const icon = document.getElementById('iconPlay');
+  const label = document.getElementById('playLabel');
+  if (state.isPlaying) {
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    label.textContent = 'Pausar';
+  } else {
+    icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+    label.textContent = 'Reproducir';
+  }
+}
+
+// ====== UI updates ======
+function updateUI() {
+  document.getElementById('curFrameNum').textContent = state.currentIdx + 1;
+  document.getElementById('totalFrames').textContent = state.frames.length;
+  document.getElementById('timelineTitle').textContent = `Línea de tiempo · ${state.frames.length} fotograma(s)`;
+  document.getElementById('btnPlay').disabled = state.frames.length < 2;
+  document.getElementById('btnDelete').disabled = state.frames.length <= 1;
+  document.getElementById('btnFirst').disabled = state.currentIdx === 0;
+  document.getElementById('btnUp').disabled = state.currentIdx === 0;
+  document.getElementById('btnDown').disabled = state.currentIdx === state.frames.length - 1;
+  document.getElementById('fpsVal').textContent = state.fps;
+  document.getElementById('brushVal').textContent = state.brushSize;
+  const dot = document.getElementById('brushDot');
+  const sz = Math.min(state.brushSize, 36);
+  dot.style.width = sz + 'px';
+  dot.style.height = sz + 'px';
+}
+
+// ====== Export GIF ======
+async function exportGif() {
+  const btn = document.getElementById('btnExport');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span>Exportando…</span>';
+  btn.disabled = true;
+  try {
+    const gif = GIFEncoder();
+    const delay = Math.max(20, Math.round(1000 / state.fps));
+    const canvas = document.createElement('canvas');
+    canvas.width = CANVAS_W; canvas.height = CANVAS_H;
+    const ctx = canvas.getContext('2d');
+    for (const frame of state.frames) {
+      ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+      if (state.bgColor !== 'transparent') {
+        ctx.fillStyle = state.bgColor;
+        ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+      }
+      if (frame.data) {
+        const img = await loadImage(frame.data);
+        ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+      }
+      const { data } = ctx.getImageData(0,0,CANVAS_W,CANVAS_H);
+      const palette = quantize(data, 256);
+      const index = applyPalette(data, palette);
+      gif.writeFrame(index, CANVAS_W, CANVAS_H, { palette, delay });
+    }
+    gif.finish();
+    const blob = new Blob([gif.bytes()], { type: 'image/gif' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `epanimeitor-${Date.now()}.gif`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('GIF exportado');
+  } catch (err) {
+    alert('Error al exportar: ' + err.message);
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+// ====== Save / Load ======
+function saveProject() {
+  const inputName = prompt('Nombre del archivo:', state.projectName);
+  if (inputName === null) return; // Si cancela, no descarga nada
+
+  // Limpia caracteres no válidos en nombres de archivo y asegura extensión .epa
+  let baseName = inputName.trim().replace(/[\\/:*?"<>|]/g, '_').replace(/\.(epa|json)$/i, '') || 'sin titulo';
+  state.projectName = baseName;
+  const fileName = baseName + '.epa';
+
+  const project = {
+    name: baseName,
+    width: CANVAS_W, height: CANVAS_H,
+    bgColor: state.bgColor, fps: state.fps,
+    onionSkin: state.onionSkin, frames: state.frames,
+  };
+  const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Guardado como ${fileName}`);
+}
+function loadProject() {
+  document.getElementById('fileInput').click();
+}
+async function handleFileLoad(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const project = JSON.parse(text);
+    if (!project.frames || !Array.isArray(project.frames)) throw new Error('Formato inválido');
+    state.frames = project.frames;
+    state.currentIdx = 0;
+    state.bgColor = project.bgColor || '#FFFFFF';
+    state.fps = project.fps || 8;
+    state.projectName = file.name.replace(/\.(epa|json)$/i, '') || project.name || 'sin titulo';
+    state.undoStack = []; state.redoStack = [];
+    state.isPlaying = false;
+    loadCurrentFrame();
+    renderFrames(); renderBgPresets(); updateBgDisplay();
+    document.getElementById('fpsSlider').value = state.fps;
+    showToast(`Proyecto "${state.projectName}" cargado`);
+  } catch (err) {
+    alert('No se pudo cargar: ' + err.message);
+  }
+  e.target.value = '';
+}
+
+function newAnimation() {
+  if (state.frames.length > 1 || state.frames[0].data !== emptyFrame()) {
+    if (!confirm('¿Empezar una animación nueva? Se perderán los cambios sin guardar.')) return;
+  }
+  state.frames = [{ id: uid(), data: emptyFrame(), duration: 100 }];
+  state.currentIdx = 0;
+  state.projectName = 'sin titulo';
+  state.undoStack = []; state.redoStack = [];
+  state.isPlaying = false;
+  loadCurrentFrame();
+  renderFrames();
+}
+
+// ====== Wire events ======
+drawCanvas.addEventListener('pointerdown', onPointerDown);
+drawCanvas.addEventListener('pointermove', onPointerMove);
+drawCanvas.addEventListener('pointerup', onPointerUp);
+drawCanvas.addEventListener('pointercancel', onPointerUp);
+
+document.getElementById('btnNew').addEventListener('click', newAnimation);
+document.getElementById('btnSave').addEventListener('click', saveProject);
+document.getElementById('btnLoad').addEventListener('click', loadProject);
+document.getElementById('btnExport').addEventListener('click', exportGif);
+document.getElementById('btnAdd').addEventListener('click', addFrame);
+document.getElementById('btnDuplicate').addEventListener('click', duplicateFrame);
+document.getElementById('btnDelete').addEventListener('click', deleteFrame);
+document.getElementById('btnClear').addEventListener('click', clearFrame);
+document.getElementById('btnFirst').addEventListener('click', setAsFirst);
+document.getElementById('btnUp').addEventListener('click', () => moveFrame(-1));
+document.getElementById('btnDown').addEventListener('click', () => moveFrame(1));
+document.getElementById('btnPlay').addEventListener('click', togglePlay);
+document.getElementById('btnPrev').addEventListener('click', () => {
+  state.isPlaying = false; updatePlayButton();
+  state.currentIdx = (state.currentIdx - 1 + state.frames.length) % state.frames.length;
+  loadCurrentFrame(); renderFrames();
+});
+document.getElementById('btnNext').addEventListener('click', () => {
+  state.isPlaying = false; updatePlayButton();
+  state.currentIdx = (state.currentIdx + 1) % state.frames.length;
+  loadCurrentFrame(); renderFrames();
+});
+
+document.getElementById('btnHelp').addEventListener('click', () => {
+  document.getElementById('helpDialog').showModal();
+});
+document.getElementById('dialogClose').addEventListener('click', () => {
+  document.getElementById('helpDialog').close();
+});
+
+document.getElementById('fpsSlider').addEventListener('input', e => {
+  state.fps = parseInt(e.target.value);
+  updateUI();
+});
+document.getElementById('brushSlider').addEventListener('input', e => {
+  state.brushSize = parseInt(e.target.value);
+  updateUI();
+});
+document.getElementById('onionToggle').addEventListener('change', e => {
+  state.onionSkin = e.target.checked;
+  previewCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  if (state.onionSkin && state.currentIdx > 0) drawOnionSkin();
+});
+
+// Color picker
+document.getElementById('colorPickerToggle').addEventListener('click', () => {
+  const area = document.getElementById('colorPickerArea');
+  area.style.display = area.style.display === 'none' ? 'flex' : 'none';
+});
+document.getElementById('customColorInput').addEventListener('input', e => {
+  state.color = e.target.value;
+  state.customColor = e.target.value;
+  document.getElementById('customColorText').value = e.target.value;
+  renderPalette(); updateColorDisplay();
+});
+document.getElementById('customColorText').addEventListener('input', e => {
+  const v = e.target.value;
+  if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+    state.color = v;
+    state.customColor = v;
+    document.getElementById('customColorInput').value = v;
+    renderPalette(); updateColorDisplay();
+  }
+});
+
+// Background picker
+document.getElementById('bgColorInput').addEventListener('input', e => {
+  state.bgColor = e.target.value;
+  updateBgDisplay();
+  renderFrames();
+  loadCurrentFrame();
+});
+
+document.getElementById('fileInput').addEventListener('change', handleFileLoad);
+
+// Keyboard shortcuts
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); redo(); }
+    else if (e.key === 's') { e.preventDefault(); saveProject(); }
+    else if (e.key === 'e') { e.preventDefault(); exportGif(); }
+    else if (e.key === 'o') { e.preventDefault(); loadProject(); }
+    return;
+  }
+  if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  else if (e.key === 'n') addFrame();
+  else if (e.key === 'd') duplicateFrame();
+  else if (e.key === 'o') {
+    state.onionSkin = !state.onionSkin;
+    document.getElementById('onionToggle').checked = state.onionSkin;
+    previewCtx.clearRect(0,0,CANVAS_W,CANVAS_H);
+    if (state.onionSkin && state.currentIdx > 0) drawOnionSkin();
+  }
+  else if (e.key === 'j') {
+    state.isPlaying = false; updatePlayButton();
+    state.currentIdx = (state.currentIdx - 1 + state.frames.length) % state.frames.length;
+    loadCurrentFrame(); renderFrames();
+  }
+  else if (e.key === 'k') {
+    state.isPlaying = false; updatePlayButton();
+    state.currentIdx = (state.currentIdx + 1) % state.frames.length;
+    loadCurrentFrame(); renderFrames();
+  }
+  else if (/^[1-7]$/.test(e.key)) {
+    state.tool = TOOLS[parseInt(e.key)-1].id;
+    renderToolRail();
+  }
+});
+
+// ====== Theme (Modo claro / oscuro) ======
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('epanimeitor-theme', isDark ? 'dark' : 'light');
+  const btn = document.getElementById('btnTheme');
+  const icon = document.getElementById('iconTheme');
+  if (btn && icon) {
+    btn.title = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+    icon.innerHTML = isDark
+      ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>'
+      : '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+  }
+}
+
+document.getElementById('btnTheme').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+// Init
+applyTheme(localStorage.getItem('epanimeitor-theme') || 'light');
+renderToolRail();
+renderPalette();
+renderBgPresets();
+updateColorDisplay();
+updateBgDisplay();
+updateUI();
+loadCurrentFrame();
+renderFrames();
+</script>
+
+
+</body></html>
