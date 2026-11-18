@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="epa-theme.css">
 <style>
   /* ==========================================================================
-     Estopmouyon · Estilos específicos de cámara, visor y controles
+     Estopmouyon · Paso 2: Visor unificado (Cámara en vivo + Vista de cuadro + Player)
      Complementa epa-theme.css (hereda variables de tema claro/oscuro)
      ========================================================================== */
   :root {
@@ -37,10 +37,14 @@
   header.topbar .topbar-inner {
     padding: 8px 14px;
   }
-  .brand-title {
+  .brand-link {
     display: flex;
     align-items: center;
     gap: 8px;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .brand-title {
     font-weight: 700;
     font-size: 16px;
     letter-spacing: -0.01em;
@@ -94,6 +98,9 @@
     outline-offset: -2px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   }
+  #aspectBox.previewing {
+    outline-color: #38bdf8;
+  }
 
   #video {
     width: 100%;
@@ -104,12 +111,26 @@
   }
   #video.front { transform: scaleX(-1); }
 
+  /* Imagen de vista previa / reproducción directa en el visor */
+  #previewImg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    display: none;
+    z-index: 3;
+  }
+  #previewImg.show { display: block; }
+
   #onionCanvas, #gridCanvas {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
+    z-index: 4;
   }
 
   /* Barra de estado superior dentro del visor */
@@ -121,6 +142,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     z-index: 12;
     pointer-events: none;
   }
@@ -128,6 +150,7 @@
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+    align-items: center;
     pointer-events: auto;
   }
   .status-chip {
@@ -141,10 +164,39 @@
     border-radius: 999px;
     font-variant-numeric: tabular-nums;
   }
+  .status-chip.mode-live {
+    border-color: rgba(255, 107, 107, 0.55);
+  }
+  .status-chip.mode-preview {
+    background: rgba(14, 116, 144, 0.85);
+    border-color: rgba(56, 189, 248, 0.65);
+  }
 
-  /* Botón flotante para ocultar/mostrar controles (siempre accesible dentro del visor) */
-  #toggleUiBtn {
+  .stage-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     pointer-events: auto;
+  }
+
+  .back-live-btn {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--accent-grad);
+    color: #fff;
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+  }
+  .back-live-btn.show { display: inline-flex; }
+
+  /* Botón flotante para ocultar/mostrar controles */
+  #toggleUiBtn {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -204,12 +256,8 @@
     transition: all 0.15s;
     flex-shrink: 0;
   }
-  .cam-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-  .cam-btn:active {
-    transform: scale(0.94);
-  }
+  .cam-btn:hover { background: rgba(255, 255, 255, 0.2); }
+  .cam-btn:active { transform: scale(0.94); }
   .cam-btn.active {
     background: var(--accent-grad);
     color: #fff;
@@ -252,7 +300,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
     padding-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
@@ -277,7 +326,7 @@
     color: #fff;
   }
 
-  /* Línea de tiempo */
+  /* Línea de tiempo con controles de transporte integrados */
   #timelinePanel {
     background: var(--card);
     border: 1px solid var(--border);
@@ -290,7 +339,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .timeline-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   #timelineHeader h3 {
     font-size: 11px;
@@ -299,6 +355,40 @@
     letter-spacing: 0.08em;
     color: var(--muted);
   }
+
+  /* Controles de reproducción directa (Play/Pausa, Anterior/Siguiente, Bucle, Volver a cámara) */
+  .transport-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .transport-btn {
+    height: 30px;
+    min-width: 30px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .transport-btn:hover { background: var(--surface-hover); }
+  .transport-btn.active {
+    background: var(--accent-grad);
+    color: #fff;
+    border-color: transparent;
+  }
+  .transport-btn.live-pill.is-live {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   #timelineStrip {
     display: flex;
     gap: 6px;
@@ -325,6 +415,10 @@
     transform: translateY(-2px);
     box-shadow: 0 3px 8px rgba(255, 107, 107, 0.25);
   }
+  .thumb.viewing {
+    border-color: #38bdf8;
+    box-shadow: 0 3px 10px rgba(56, 189, 248, 0.35);
+  }
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumb .num {
     position: absolute;
@@ -339,6 +433,7 @@
     pointer-events: none;
   }
   .thumb.current .num { background: var(--accent); }
+  .thumb.viewing .num { background: #0284c7; }
   .thumb .del {
     position: absolute;
     top: 3px;
@@ -526,8 +621,10 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <span class="brand-badge">EPA</span>
-        <span class="brand-title">Estopmouyon</span>
+        <a href="index.html" class="brand-link" title="Volver al menú EPA">
+          <span class="brand-badge">EPA</span>
+          <span class="brand-title">Estopmouyon</span>
+        </a>
       </div>
       <div class="topbar-actions">
         <button class="btn btn-sm" id="projectsBtn" title="Proyectos guardados">
@@ -553,17 +650,25 @@
     <div id="stage">
       <div id="statusBar">
         <div id="statusChips">
+          <span class="status-chip mode-live" id="chipMode">Cámara en vivo</span>
           <span class="status-chip" id="chipFrame">Cuadro 0/0</span>
           <span class="status-chip" id="chipFps">12 FPS</span>
           <span class="status-chip" id="chipDur">0.0s</span>
         </div>
-        <button id="toggleUiBtn" title="Ocultar controles de cámara" aria-label="Ocultar controles de cámara">
-          <svg id="toggleUiIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+        <div class="stage-top-actions">
+          <button class="back-live-btn" id="backLiveBtn" title="Volver a la cámara en vivo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            <span>Volver a cámara</span>
+          </button>
+          <button id="toggleUiBtn" title="Ocultar controles de cámara" aria-label="Ocultar controles de cámara">
+            <svg id="toggleUiIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
 
       <div id="aspectBox">
         <video id="video" autoplay playsinline muted></video>
+        <img id="previewImg" alt="Vista previa del cuadro">
         <canvas id="onionCanvas"></canvas>
         <canvas id="gridCanvas"></canvas>
       </div>
@@ -610,7 +715,28 @@
 
     <div id="timelinePanel">
       <div id="timelineHeader">
-        <h3>Línea de tiempo</h3>
+        <div class="timeline-title-group">
+          <h3>Línea de tiempo</h3>
+          <div class="transport-bar" aria-label="Controles de reproducción">
+            <button class="transport-btn" id="prevFrameBtn" title="Cuadro anterior (←)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+            </button>
+            <button class="transport-btn" id="playPauseBtn" title="Reproducir / Pausar en visor (P)">
+              <svg id="playPauseIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+              <span id="playPauseLabel">Play</span>
+            </button>
+            <button class="transport-btn" id="nextFrameBtn" title="Cuadro siguiente (→)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            </button>
+            <button class="transport-btn active" id="loopBtn" title="Reproducción en bucle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            </button>
+            <button class="transport-btn live-pill is-live" id="liveModeBtn" title="Activar cámara en vivo (Esc)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+              <span>Cámara</span>
+            </button>
+          </div>
+        </div>
         <div style="display:flex; gap:6px;">
           <button class="btn btn-sm" id="clearAllBtn">Limpiar todo</button>
         </div>
@@ -757,6 +883,10 @@ const state = {
   facingMode: 'environment',
   frames: [],
   currentFrameIndex: -1,
+  viewMode: 'live', // 'live' (cámara en vivo) | 'preview' (cuadro seleccionado o reproducción)
+  playing: false,
+  loop: true,
+  playTimer: null,
   fps: 12,
   orient: 'landscape',
   resWidth: 854,
@@ -791,6 +921,7 @@ const ASPECT_LABELS = {
 // ============================================================
 const $ = (id) => document.getElementById(id);
 const video = $('video');
+const previewImg = $('previewImg');
 const onionCanvas = $('onionCanvas');
 const gridCanvas = $('gridCanvas');
 const onionCtx = onionCanvas.getContext('2d');
@@ -913,6 +1044,136 @@ function dbDeleteFrame(id) {
 }
 
 // ============================================================
+// VIEWPORT MODE: LIVE CAMERA vs FRAME PREVIEW / PLAYBACK
+// ============================================================
+function syncViewportDisplay() {
+  const isPreview = state.viewMode === 'preview' && state.frames.length > 0 && state.currentFrameIndex >= 0;
+  const box = $('aspectBox');
+  const chipMode = $('chipMode');
+  const backLiveBtn = $('backLiveBtn');
+  const liveModeBtn = $('liveModeBtn');
+
+  if (isPreview) {
+    const f = state.frames[state.currentFrameIndex];
+    previewImg.src = f.url;
+    previewImg.classList.add('show');
+    box.classList.add('previewing');
+    chipMode.textContent = state.playing ? 'Reproduciendo' : 'Vista de cuadro';
+    chipMode.classList.remove('mode-live');
+    chipMode.classList.add('mode-preview');
+    backLiveBtn.classList.add('show');
+    liveModeBtn.classList.remove('is-live');
+    onionCtx.clearRect(0, 0, onionCanvas.width, onionCanvas.height);
+  } else {
+    state.viewMode = 'live';
+    previewImg.classList.remove('show');
+    previewImg.removeAttribute('src');
+    box.classList.remove('previewing');
+    chipMode.textContent = 'Cámara en vivo';
+    chipMode.classList.add('mode-live');
+    chipMode.classList.remove('mode-preview');
+    backLiveBtn.classList.remove('show');
+    liveModeBtn.classList.add('is-live');
+    drawOnion();
+  }
+}
+
+function selectFrameForPreview(index) {
+  if (state.frames.length === 0) return;
+  pausePlayback();
+  state.currentFrameIndex = Math.max(0, Math.min(state.frames.length - 1, index));
+  state.viewMode = 'preview';
+  syncViewportDisplay();
+  updateStatus();
+  renderTimeline(true);
+}
+
+function returnToLiveCamera() {
+  pausePlayback();
+  state.viewMode = 'live';
+  if (state.frames.length > 0) {
+    state.currentFrameIndex = state.frames.length - 1;
+  } else {
+    state.currentFrameIndex = -1;
+  }
+  syncViewportDisplay();
+  updateStatus();
+  renderTimeline(true);
+}
+
+// ============================================================
+// INLINE PLAYBACK (En el visor principal, sin modal)
+// ============================================================
+function updatePlayButtonUI() {
+  const btn = $('playPauseBtn');
+  const icon = $('playPauseIcon');
+  const label = $('playPauseLabel');
+  btn.classList.toggle('active', state.playing);
+  if (state.playing) {
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    label.textContent = 'Pausa';
+  } else {
+    icon.innerHTML = '<polygon points="6 4 20 12 6 20 6 4"/>';
+    label.textContent = 'Play';
+  }
+}
+
+function startPlayback() {
+  if (state.frames.length === 0) {
+    showToast('Capturá al menos un cuadro para reproducir');
+    return;
+  }
+  if (state.playing) return;
+
+  // Si estábamos viendo el último cuadro o en cámara en vivo, arrancar desde el principio
+  if (state.viewMode === 'live' || state.currentFrameIndex >= state.frames.length - 1 || state.currentFrameIndex < 0) {
+    state.currentFrameIndex = 0;
+  }
+
+  state.playing = true;
+  state.viewMode = 'preview';
+  updatePlayButtonUI();
+  syncViewportDisplay();
+  updateStatus();
+  renderTimeline(true);
+
+  const step = () => {
+    if (!state.playing) return;
+    let next = state.currentFrameIndex + 1;
+    if (next >= state.frames.length) {
+      if (state.loop) {
+        next = 0;
+      } else {
+        pausePlayback();
+        return;
+      }
+    }
+    state.currentFrameIndex = next;
+    syncViewportDisplay();
+    updateStatus();
+    renderTimeline(true);
+    state.playTimer = setTimeout(step, 1000 / state.fps);
+  };
+
+  state.playTimer = setTimeout(step, 1000 / state.fps);
+}
+
+function pausePlayback() {
+  state.playing = false;
+  clearTimeout(state.playTimer);
+  state.playTimer = null;
+  updatePlayButtonUI();
+  if (state.viewMode === 'preview') {
+    syncViewportDisplay();
+  }
+}
+
+function togglePlayback() {
+  if (state.playing) pausePlayback();
+  else startPlayback();
+}
+
+// ============================================================
 // CAMERA & VIEWPORT SIZING
 // ============================================================
 async function initCamera() {
@@ -948,6 +1209,7 @@ async function initCamera() {
 }
 
 async function toggleCamera() {
+  returnToLiveCamera();
   state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
   await initCamera();
   await saveProjectMeta();
@@ -984,7 +1246,7 @@ function resizeCanvases() {
     c.height = ch;
   });
   drawGrid();
-  drawOnion();
+  if (state.viewMode === 'live') drawOnion();
 }
 
 // ============================================================
@@ -992,6 +1254,12 @@ function resizeCanvases() {
 // ============================================================
 async function captureFrame() {
   if (state.capturing) return;
+
+  // Si estaba previsualizando o reproduciendo, vuelve a cámara en vivo antes de capturar
+  if (state.viewMode !== 'live' || state.playing) {
+    returnToLiveCamera();
+  }
+
   state.capturing = true;
   captureBtn.disabled = true;
 
@@ -1080,7 +1348,7 @@ async function captureFrame() {
 
     state.undoStack.push({ type: 'capture', frameId: frame.id });
     updateStatus();
-    renderTimeline();
+    renderTimeline(true);
     drawOnion();
 
     if (navigator.vibrate) navigator.vibrate(40);
@@ -1093,22 +1361,27 @@ async function captureFrame() {
 }
 
 async function deleteFrame(id) {
+  pausePlayback();
   const idx = state.frames.findIndex(f => f.id === id);
   if (idx < 0) return;
   const snapshot = state.frames[idx];
   state.frames.splice(idx, 1);
   await dbDeleteFrame(id);
-  if (state.currentFrameIndex >= state.frames.length) {
+  if (state.frames.length === 0) {
+    state.currentFrameIndex = -1;
+    state.viewMode = 'live';
+  } else if (state.currentFrameIndex >= state.frames.length) {
     state.currentFrameIndex = state.frames.length - 1;
   }
   state.undoStack.push({ type: 'delete', frame: snapshot, idx });
+  syncViewportDisplay();
   updateStatus();
-  renderTimeline();
-  drawOnion();
+  renderTimeline(false);
   await saveProjectMeta();
 }
 
 async function undo() {
+  pausePlayback();
   if (state.undoStack.length === 0) {
     showToast('Nada para deshacer');
     return;
@@ -1122,12 +1395,15 @@ async function undo() {
       URL.revokeObjectURL(f.thumbUrl);
       state.frames.splice(idx, 1);
       await dbDeleteFrame(op.frameId);
-      if (state.currentFrameIndex >= state.frames.length) {
+      if (state.frames.length === 0) {
+        state.currentFrameIndex = -1;
+        state.viewMode = 'live';
+      } else if (state.currentFrameIndex >= state.frames.length) {
         state.currentFrameIndex = state.frames.length - 1;
       }
+      syncViewportDisplay();
       updateStatus();
-      renderTimeline();
-      drawOnion();
+      renderTimeline(true);
       await saveProjectMeta();
       showToast('Captura deshecha');
     }
@@ -1143,9 +1419,9 @@ async function undo() {
       seqIndex: op.frame.seqIndex,
     });
     state.currentFrameIndex = op.idx;
+    syncViewportDisplay();
     updateStatus();
-    renderTimeline();
-    drawOnion();
+    renderTimeline(true);
     await saveProjectMeta();
     showToast('Cuadro restaurado');
   }
@@ -1156,6 +1432,7 @@ async function undo() {
 // ============================================================
 async function drawOnion() {
   onionCtx.clearRect(0, 0, onionCanvas.width, onionCanvas.height);
+  if (state.viewMode !== 'live') return;
   if (!state.onionEnabled || state.frames.length === 0 || state.currentFrameIndex < 0) return;
 
   const layers = state.onionLayers;
@@ -1211,7 +1488,7 @@ function drawGrid() {
 // ============================================================
 // TIMELINE
 // ============================================================
-function renderTimeline() {
+function renderTimeline(scrollToActive = false) {
   timelineStrip.innerHTML = '';
   if (state.frames.length === 0) {
     const div = document.createElement('div');
@@ -1220,21 +1497,25 @@ function renderTimeline() {
     timelineStrip.appendChild(div);
     return;
   }
+
+  let activeEl = null;
   state.frames.forEach((f, i) => {
+    const isCurrent = i === state.currentFrameIndex;
+    const isViewing = isCurrent && state.viewMode === 'preview';
     const div = document.createElement('div');
-    div.className = 'thumb' + (i === state.currentFrameIndex ? ' current' : '');
+    div.className = 'thumb' + (isCurrent ? ' current' : '') + (isViewing ? ' viewing' : '');
     div.innerHTML = `
       <img src="${f.thumbUrl}" alt="Cuadro ${i + 1}">
       <div class="num">${i + 1}</div>
       <button class="del" title="Eliminar cuadro">×</button>
     `;
+    if (isCurrent) activeEl = div;
+
     div.addEventListener('click', (e) => {
       if (e.target.classList.contains('del')) return;
-      state.currentFrameIndex = i;
-      updateStatus();
-      renderTimeline();
-      drawOnion();
+      selectFrameForPreview(i);
     });
+
     div.querySelector('.del').addEventListener('click', async (e) => {
       e.stopPropagation();
       if (confirm(`¿Eliminar el cuadro ${i + 1}?`)) {
@@ -1242,9 +1523,13 @@ function renderTimeline() {
         showToast(`Cuadro ${i + 1} eliminado`);
       }
     });
+
     timelineStrip.appendChild(div);
   });
-  timelineStrip.scrollLeft = timelineStrip.scrollWidth;
+
+  if (scrollToActive && activeEl) {
+    activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }
 }
 
 function updateStatus() {
@@ -1300,6 +1585,7 @@ async function saveProjectMeta() {
 }
 
 async function loadProject(id) {
+  pausePlayback();
   const meta = await dbLoadProject(id);
   if (!meta) throw new Error('Proyecto no encontrado');
   state.projectId = meta.id;
@@ -1318,6 +1604,7 @@ async function loadProject(id) {
   state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
   state.frames = [];
   state.currentFrameIndex = -1;
+  state.viewMode = 'live';
 
   const framesData = await dbLoadFrames(id);
   framesData.sort((a, b) => a.seqIndex - b.seqIndex);
@@ -1336,9 +1623,9 @@ async function loadProject(id) {
   state.currentFrameIndex = state.frames.length - 1;
 
   applySettingsToUI();
+  syncViewportDisplay();
   updateStatus();
-  renderTimeline();
-  drawOnion();
+  renderTimeline(true);
   localStorage.setItem('lastProjectId', id);
 }
 
@@ -1433,7 +1720,7 @@ async function renderProjectsList() {
 // EVENT LISTENERS
 // ============================================================
 captureBtn.addEventListener('click', () => {
-  captureBtn.blur(); // Evita doble disparo al usar Barra Espaciadora
+  captureBtn.blur();
   captureFrame();
 });
 
@@ -1441,9 +1728,43 @@ $('toggleUiBtn').addEventListener('click', () => {
   setCaptureUiHidden(!state.hideUi);
 });
 
+$('backLiveBtn').addEventListener('click', returnToLiveCamera);
+$('liveModeBtn').addEventListener('click', returnToLiveCamera);
+
+// Controles de transporte directo
+$('playPauseBtn').addEventListener('click', togglePlayback);
+
+$('prevFrameBtn').addEventListener('click', () => {
+  if (state.frames.length === 0) return;
+  const target = state.viewMode === 'live'
+    ? state.frames.length - 1
+    : Math.max(0, state.currentFrameIndex - 1);
+  selectFrameForPreview(target);
+});
+
+$('nextFrameBtn').addEventListener('click', () => {
+  if (state.frames.length === 0) return;
+  if (state.viewMode === 'live') {
+    selectFrameForPreview(0);
+    return;
+  }
+  if (state.currentFrameIndex >= state.frames.length - 1) {
+    returnToLiveCamera();
+  } else {
+    selectFrameForPreview(state.currentFrameIndex + 1);
+  }
+});
+
+$('loopBtn').addEventListener('click', () => {
+  state.loop = !state.loop;
+  $('loopBtn').classList.toggle('active', state.loop);
+  showToast(state.loop ? 'Bucle activado' : 'Bucle desactivado');
+});
+
 $('cameraBtn').addEventListener('click', toggleCamera);
 
 $('onionBtn').addEventListener('click', async () => {
+  if (state.viewMode !== 'live') returnToLiveCamera();
   state.onionEnabled = !state.onionEnabled;
   $('onionBtn').classList.toggle('active', state.onionEnabled);
   drawOnion();
@@ -1476,17 +1797,19 @@ $('clearAllBtn').addEventListener('click', async () => {
     return;
   }
   if (!confirm(`¿Eliminar TODOS los ${state.frames.length} cuadros?`)) return;
+  pausePlayback();
   const ids = state.frames.map(f => f.id);
   state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
   state.frames = [];
   state.currentFrameIndex = -1;
+  state.viewMode = 'live';
   state.undoStack = [];
   for (const id of ids) await dbDeleteFrame(id);
   await saveProjectMeta();
   setCaptureUiHidden(false);
+  syncViewportDisplay();
   updateStatus();
-  renderTimeline();
-  drawOnion();
+  renderTimeline(false);
   showToast('Línea de tiempo vacía');
 });
 
@@ -1529,16 +1852,19 @@ $('flashBtn').addEventListener('click', async () => {
 });
 
 $('projectsBtn').addEventListener('click', async () => {
+  pausePlayback();
   await renderProjectsList();
   openModal('projectsModal');
 });
 
 $('settingsBtn').addEventListener('click', () => {
+  pausePlayback();
   applySettingsToUI();
   openModal('settingsModal');
 });
 
 $('exportBtn').addEventListener('click', () => {
+  pausePlayback();
   if (state.frames.length === 0) {
     showToast('Capturá al menos un cuadro antes de exportar');
     return;
@@ -1549,18 +1875,20 @@ $('exportBtn').addEventListener('click', () => {
 $('newProjectBtn').addEventListener('click', async () => {
   const name = prompt('Nombre del proyecto:', 'Mi animación');
   if (name === null) return;
+  pausePlayback();
   state.projectId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
   state.projectName = name.trim() || 'Mi animación';
   state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
   state.frames = [];
   state.currentFrameIndex = -1;
+  state.viewMode = 'live';
   state.undoStack = [];
   state._createdAt = Date.now();
   await saveProjectMeta();
   applySettingsToUI();
+  syncViewportDisplay();
   updateStatus();
-  renderTimeline();
-  drawOnion();
+  renderTimeline(false);
   setCaptureUiHidden(false);
   closeModal('projectsModal');
   showToast(`Nuevo proyecto: ${state.projectName}`);
@@ -1608,15 +1936,29 @@ document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
   const anyModalOpen = Array.from(document.querySelectorAll('.modal-backdrop')).some(m => m.style.display === 'flex');
   if (anyModalOpen) return;
+
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
     captureFrame();
+  } else if (e.code === 'KeyP') {
+    e.preventDefault();
+    togglePlayback();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    $('prevFrameBtn').click();
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    $('nextFrameBtn').click();
   } else if (e.code === 'KeyO') {
     $('onionBtn').click();
   } else if (e.code === 'KeyG') {
     $('gridBtn').click();
-  } else if (e.code === 'Escape' && state.hideUi) {
-    setCaptureUiHidden(false);
+  } else if (e.code === 'Escape') {
+    if (state.playing || state.viewMode !== 'live') {
+      returnToLiveCamera();
+    } else if (state.hideUi) {
+      setCaptureUiHidden(false);
+    }
   }
 });
 
@@ -1649,8 +1991,9 @@ async function init() {
     }
 
     applySettingsToUI();
+    syncViewportDisplay();
     updateStatus();
-    renderTimeline();
+    renderTimeline(true);
     setCaptureUiHidden(false);
     await initCamera();
   } catch (e) {
