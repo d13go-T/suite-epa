@@ -8,6 +8,8 @@
 <meta name="description" content="Crea animaciones foto a foto y exportalas en GIF o MP4. Simple, colorido y gratuito. Escuela para Animadores Rosario.">
 
 <link rel="stylesheet" href="epa-theme.css">
+<!-- Gestor unificado de proyectos Suite EPA (.estop + IndexedDB) -->
+<script src="epa-projects.js"></script>
 <!-- Librerías de exportación (MP4 H.264 con mp4-muxer + WebCodecs y GIF animado con gif.js) -->
 <script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
@@ -24,13 +26,25 @@
         </a>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-sm" id="projectsBtn" title="Proyectos guardados">
+        <button class="btn btn-sm" id="newProjectBtn" title="Nuevo proyecto (Ctrl+N)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <span class="btn-label-hide-sm">Nuevo</span>
+        </button>
+        <button class="btn btn-sm" id="openProjectBtn" title="Abrir proyecto (Ctrl+O)">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
-          <span>Proyectos</span>
+          <span>Abrir</span>
+        </button>
+        <button class="btn btn-sm" id="saveProjectBtn" title="Guardar proyecto (Ctrl+S)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span id="saveProjectLabel">Guardar</span>
+        </button>
+        <button class="btn btn-sm" id="saveAsProjectBtn" title="Guardar como... (Ctrl+Shift+S)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <span class="btn-label-hide-sm">Guardar como</span>
         </button>
         <button class="btn btn-sm" id="settingsBtn" title="Ajustes de proyecto">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-          <span>Ajustes</span>
+          <span class="btn-label-hide-sm">Ajustes</span>
         </button>
         <button class="btn btn-sm btn-primary" id="exportBtn" title="Exportar animación">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -208,27 +222,13 @@
   </div>
 </div>
 
-<!-- Projects modal -->
-<div class="modal-backdrop" id="projectsModal" style="display:none;">
-  <div class="modal">
-    <h2>Proyectos</h2>
-    <div class="form-row">
-      <button class="btn btn-primary" id="newProjectBtn" style="width:100%; justify-content:center;">+ Nuevo proyecto</button>
-    </div>
-    <div id="projectsList"></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('projectsModal')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
 <!-- Settings modal -->
 <div class="modal-backdrop" id="settingsModal" style="display:none;">
   <div class="modal">
     <h2>Ajustes del proyecto</h2>
     <div class="form-row">
       <label>Nombre del proyecto</label>
-      <input type="text" id="projName" placeholder="Mi animación">
+      <input type="text" id="projName" placeholder="Animacion sin titulo">
     </div>
     <div class="form-row">
       <label>Orientación</label>
@@ -268,7 +268,7 @@
   </div>
 </div>
 
-<!-- Export modal (Paso 4: MP4 H.264 / GIF animado + hasta 1080p) -->
+<!-- Export modal -->
 <div class="modal-backdrop" id="exportModal" style="display:none;">
   <div class="modal">
     <h2>Exportar animación</h2>
@@ -331,6 +331,7 @@
 // ============================================================
 const FPS_OPTIONS = [4, 6, 8, 10, 12, 15, 18, 24, 30];
 const RES_TIERS = [480, 720, 1080];
+const DEFAULT_PROJ_NAME = window.EpaProjectUtils?.DEFAULT_PROJECT_NAME || 'Animacion sin titulo';
 
 const ASPECTS = {
   landscape: 16 / 9,
@@ -344,13 +345,6 @@ const ASPECT_LABELS = {
   square: '1:1',
 };
 
-/**
- * Calcula dimensiones pares (requisito de H.264 / YUV420) según el nivel de resolución (480p, 720p, 1080p)
- * y la orientación elegida:
- * - 16:9 -> 854x480, 1280x720, 1920x1080
- * - 9:16 -> 480x854, 720x1280, 1080x1920
- * - 1:1  -> 480x480, 720x720, 1080x1080
- */
 function getTargetDimensions(resTier, orient) {
   const tier = RES_TIERS.includes(Number(resTier)) ? Number(resTier) : 1080;
   let w, h;
@@ -364,7 +358,6 @@ function getTargetDimensions(resTier, orient) {
     w = tier;
     h = tier;
   }
-  // Asegurar múltiplos de 2 para codificadores H.264
   w = w % 2 === 0 ? w : w + 1;
   h = h % 2 === 0 ? h : h + 1;
   return { w, h };
@@ -414,25 +407,25 @@ const state = {
   playTimer: null,
   fps: 12,
   orient: 'landscape',
-  resTier: 1080, // 480 | 720 | 1080 (Full HD por defecto)
+  resTier: 1080,
   fitMode: 'cover',
   onionEnabled: false,
   onionOpacity: 0.4,
   onionLayers: 1,
   gridMode: 0,
-  projectId: 'default',
-  projectName: 'Mi animación',
+  projectId: null,
+  projectName: DEFAULT_PROJ_NAME,
   hideUi: false,
   hideTimeline: false,
   undoStack: [],
-  db: null,
   capturing: false,
   dragSrcIndex: null,
   exportFormat: 'mp4',
   exporting: false,
   exportCancelled: false,
-  _createdAt: null,
 };
+
+let projectManager = null;
 
 // ============================================================
 // DOM
@@ -467,120 +460,292 @@ function showToast(msg) {
 }
 
 // ============================================================
-// INDEXEDDB
+// GESTOR UNIFICADO DE PROYECTOS (epa-projects.js v2 -> .estop + IndexedDB)
 // ============================================================
-const DB_NAME = 'stopmotion_db';
-const DB_VERSION = 1;
-const STORE_PROJECTS = 'projects';
-const STORE_FRAMES = 'frames';
-
-function openDb() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_PROJECTS)) {
-        db.createObjectStore(STORE_PROJECTS, { keyPath: 'id' });
-      }
-      if (!db.objectStoreNames.contains(STORE_FRAMES)) {
-        const store = db.createObjectStore(STORE_FRAMES, { keyPath: 'id' });
-        store.createIndex('projectId', 'projectId', { unique: false });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+function revokeAllFrameUrls() {
+  state.frames.forEach(f => {
+    if (f.url) URL.revokeObjectURL(f.url);
+    if (f.thumbUrl) URL.revokeObjectURL(f.thumbUrl);
   });
 }
 
-function dbSaveProject(proj) {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_PROJECTS], 'readwrite');
-    tx.objectStore(STORE_PROJECTS).put(proj);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+function updateProjectHeaderUI(info = {}) {
+  const name = info.name || projectManager?.currentProjectName || state.projectName || DEFAULT_PROJ_NAME;
+  state.projectName = name;
+
+  const saveLabel = $('saveProjectLabel');
+  const saveBtn = $('saveProjectBtn');
+  if (saveLabel) {
+    saveLabel.textContent = info.isDirty ? 'Guardar*' : 'Guardar';
+  }
+  if (saveBtn) {
+    const targetFile = info.fileName ? ` (${info.fileName})` : '';
+    saveBtn.title = `Guardar proyecto${targetFile} (Ctrl+S)`;
+  }
+  document.title = `${info.isDirty ? '• ' : ''}${name} · Estopmouyon`;
 }
 
-function dbLoadProject(id) {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_PROJECTS], 'readonly');
-    const req = tx.objectStore(STORE_PROJECTS).get(id);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function dbListProjects() {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_PROJECTS], 'readonly');
-    const req = tx.objectStore(STORE_PROJECTS).getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function dbDeleteProject(id) {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_PROJECTS, STORE_FRAMES], 'readwrite');
-    tx.objectStore(STORE_PROJECTS).delete(id);
-    const idx = tx.objectStore(STORE_FRAMES).index('projectId');
-    idx.openCursor(IDBKeyRange.only(id)).onsuccess = (e) => {
-      const cursor = e.target.result;
-      if (cursor) { cursor.delete(); cursor.continue(); }
-    };
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-function dbSaveFrame(frame) {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_FRAMES], 'readwrite');
-    tx.objectStore(STORE_FRAMES).put(frame);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-function dbSyncFrameOrder() {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_FRAMES], 'readwrite');
-    const store = tx.objectStore(STORE_FRAMES);
-    state.frames.forEach((f, idx) => {
-      f.seqIndex = idx + 1;
-      store.put({
+function buildProjectSnapshot() {
+  const firstThumb = state.frames.length > 0 ? state.frames[0].thumbBlob : '';
+  return {
+    id: state.projectId,
+    name: state.projectName || DEFAULT_PROJ_NAME,
+    frameCount: state.frames.length,
+    thumb: firstThumb,
+    payload: {
+      fps: state.fps,
+      orient: state.orient,
+      resTier: state.resTier,
+      fitMode: state.fitMode,
+      onionEnabled: state.onionEnabled,
+      onionOpacity: state.onionOpacity,
+      onionLayers: state.onionLayers,
+      gridMode: state.gridMode,
+      facingMode: state.facingMode,
+      frames: state.frames.map((f, idx) => ({
         id: f.id,
-        projectId: f.projectId,
         blob: f.blob,
         thumbBlob: f.thumbBlob,
         w: f.w,
         h: f.h,
         capturedAt: f.capturedAt,
-        seqIndex: f.seqIndex,
-      });
+        seqIndex: idx + 1,
+      })),
+    },
+  };
+}
+
+async function restoreProjectFromState(meta, payload = {}) {
+  pausePlayback();
+  const prevFacing = state.facingMode;
+  const prevRes = state.resTier;
+
+  state.projectId = meta.id;
+  state.projectName = (meta.name || DEFAULT_PROJ_NAME).trim() || DEFAULT_PROJ_NAME;
+  state.fps = FPS_OPTIONS.includes(payload.fps) ? payload.fps : 12;
+  state.orient = payload.orient || 'landscape';
+  state.resTier = normalizeLegacyResTier(payload.resTier ?? payload.resWidth ?? 1080);
+  state.fitMode = payload.fitMode || 'cover';
+  state.onionEnabled = !!payload.onionEnabled;
+  state.onionOpacity = payload.onionOpacity ?? 0.4;
+  state.onionLayers = payload.onionLayers ?? 1;
+  state.gridMode = payload.gridMode ?? 0;
+  state.facingMode = payload.facingMode || 'environment';
+
+  revokeAllFrameUrls();
+  state.frames = [];
+  state.currentFrameIndex = -1;
+  state.viewMode = 'live';
+  state.undoStack = [];
+
+  const rawFrames = Array.isArray(payload.frames) ? payload.frames : [];
+  for (let i = 0; i < rawFrames.length; i++) {
+    const fd = rawFrames[i];
+    const blob = fd.blob instanceof Blob ? fd.blob : await EpaProjectUtils.dataUrlToBlob(fd.blobDataUrl || fd.blob);
+    const thumbBlob = fd.thumbBlob instanceof Blob
+      ? fd.thumbBlob
+      : (fd.thumbDataUrl || fd.thumbBlob
+          ? await EpaProjectUtils.dataUrlToBlob(fd.thumbDataUrl || fd.thumbBlob)
+          : blob);
+    if (!blob) continue;
+
+    state.frames.push({
+      id: fd.id || ('f_' + Date.now() + '_' + i),
+      blob,
+      url: URL.createObjectURL(blob),
+      thumbBlob,
+      thumbUrl: URL.createObjectURL(thumbBlob),
+      w: fd.w || 1920,
+      h: fd.h || 1080,
+      capturedAt: fd.capturedAt || Date.now(),
+      seqIndex: i + 1,
+      projectId: state.projectId,
     });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
+  }
+
+  state.currentFrameIndex = state.frames.length - 1;
+  $('exportFps').value = String(state.fps);
+  $('exportRes').value = String(state.resTier);
+
+  applySettingsToUI();
+  syncViewportDisplay();
+  updateStatus();
+  renderTimeline(true);
+  setCaptureUiHidden(false);
+  requestAnimationFrame(resizeCanvases);
+
+  if (state.stream && (prevFacing !== state.facingMode || prevRes !== state.resTier)) {
+    await initCamera();
+  }
+}
+
+async function createBlankProjectState(name, id) {
+  pausePlayback();
+  revokeAllFrameUrls();
+  state.projectId = id;
+  state.projectName = (name || DEFAULT_PROJ_NAME).trim() || DEFAULT_PROJ_NAME;
+  state.frames = [];
+  state.currentFrameIndex = -1;
+  state.viewMode = 'live';
+  state.undoStack = [];
+
+  applySettingsToUI();
+  syncViewportDisplay();
+  updateStatus();
+  renderTimeline(false);
+  setCaptureUiHidden(false);
+  requestAnimationFrame(resizeCanvases);
+}
+
+// Serialización a archivo .estop (convierte Blobs a DataURL para JSON portable)
+async function serializeEstopFile(meta, payload) {
+  const encodedFrames = [];
+  for (const f of (payload.frames || [])) {
+    const blobDataUrl = await EpaProjectUtils.blobToDataUrl(f.blob);
+    const thumbDataUrl = f.thumbBlob
+      ? await EpaProjectUtils.blobToDataUrl(f.thumbBlob)
+      : blobDataUrl;
+    encodedFrames.push({
+      id: f.id,
+      blobDataUrl,
+      thumbDataUrl,
+      w: f.w,
+      h: f.h,
+      capturedAt: f.capturedAt,
+      seqIndex: f.seqIndex,
+    });
+  }
+
+  return JSON.stringify({
+    suite: 'EPA',
+    appId: 'estopmouyon',
+    version: 1,
+    name: meta.name || DEFAULT_PROJ_NAME,
+    savedAt: new Date().toISOString(),
+    payload: {
+      ...payload,
+      frames: encodedFrames,
+    },
   });
 }
 
-function dbLoadFrames(projectId) {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_FRAMES], 'readonly');
-    const idx = tx.objectStore(STORE_FRAMES).index('projectId');
-    const req = idx.getAll(IDBKeyRange.only(projectId));
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
+// Deserialización de archivo .estop al abrir desde disco
+async function deserializeEstopFile(rawObj, fileBaseName) {
+  const srcPayload = rawObj.payload || rawObj;
+  const rawFrames = Array.isArray(srcPayload.frames) ? srcPayload.frames : [];
+  const restoredFrames = [];
+
+  for (let i = 0; i < rawFrames.length; i++) {
+    const f = rawFrames[i];
+    const blob = await EpaProjectUtils.dataUrlToBlob(f.blobDataUrl || f.blob);
+    const thumbBlob = (f.thumbDataUrl || f.thumbBlob)
+      ? await EpaProjectUtils.dataUrlToBlob(f.thumbDataUrl || f.thumbBlob)
+      : blob;
+    if (!blob) continue;
+
+    restoredFrames.push({
+      id: f.id || ('f_' + Date.now() + '_' + i),
+      blob,
+      thumbBlob,
+      w: f.w || 1920,
+      h: f.h || 1080,
+      capturedAt: f.capturedAt || Date.now(),
+      seqIndex: i + 1,
+    });
+  }
+
+  return {
+    name: rawObj.name || fileBaseName || DEFAULT_PROJ_NAME,
+    payload: {
+      ...srcPayload,
+      frames: restoredFrames,
+    },
+  };
 }
 
-function dbDeleteFrame(id) {
-  return new Promise((resolve, reject) => {
-    const tx = state.db.transaction([STORE_FRAMES], 'readwrite');
-    tx.objectStore(STORE_FRAMES).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+// Migración automática única desde la base anterior (stopmotion_db) si existiera
+async function migrateLegacyStopmotionDb(pm) {
+  if (localStorage.getItem('epa_migrated_stopmotion_v1')) return;
+  try {
+    const existing = await pm.listProjects();
+    if (existing.length > 0) {
+      localStorage.setItem('epa_migrated_stopmotion_v1', '1');
+      return;
+    }
+    const dbs = indexedDB.databases ? await indexedDB.databases() : [];
+    const hasLegacy = dbs.some(d => d.name === 'stopmotion_db');
+    if (!hasLegacy) {
+      localStorage.setItem('epa_migrated_stopmotion_v1', '1');
+      return;
+    }
+
+    const legacyDb = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('stopmotion_db', 1);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+
+    if (!legacyDb.objectStoreNames.contains('projects') || !legacyDb.objectStoreNames.contains('frames')) {
+      legacyDb.close();
+      localStorage.setItem('epa_migrated_stopmotion_v1', '1');
+      return;
+    }
+
+    const projects = await new Promise((resolve) => {
+      const tx = legacyDb.transaction(['projects'], 'readonly');
+      const req = tx.objectStore('projects').getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    });
+
+    for (const p of projects) {
+      const frames = await new Promise((resolve) => {
+        const tx = legacyDb.transaction(['frames'], 'readonly');
+        const idx = tx.objectStore('frames').index('projectId');
+        const req = idx.getAll(IDBKeyRange.only(p.id));
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      });
+      frames.sort((a, b) => (a.seqIndex || 0) - (b.seqIndex || 0));
+      if (frames.length === 0 && projects.length === 1 && p.name === 'Mi animación') continue;
+
+      const migratedName = (!p.name || p.name === 'Mi animación') ? DEFAULT_PROJ_NAME : p.name;
+      await pm.startNewProject(migratedName, { silent: true });
+      await restoreProjectFromState(
+        { id: pm.currentProjectId, name: migratedName },
+        {
+          fps: p.fps,
+          orient: p.orient,
+          resTier: p.resTier ?? p.resWidth ?? 1080,
+          fitMode: p.fitMode,
+          onionEnabled: p.onionEnabled,
+          onionOpacity: p.onionOpacity,
+          onionLayers: p.onionLayers,
+          gridMode: p.gridMode,
+          facingMode: p.facingMode,
+          frames,
+        }
+      );
+      await pm.saveNow();
+    }
+
+    legacyDb.close();
+    localStorage.setItem('epa_migrated_stopmotion_v1', '1');
+  } catch (err) {
+    console.warn('Migración legacy omitida:', err);
+  }
+}
+
+async function persistProjectNow() {
+  if (projectManager) {
+    await projectManager.saveNow();
+  }
+}
+
+function scheduleProjectAutoSave() {
+  if (projectManager) {
+    projectManager.scheduleAutoSave();
+  }
 }
 
 // ============================================================
@@ -753,7 +918,7 @@ async function toggleCamera() {
   returnToLiveCamera();
   state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
   await initCamera();
-  await saveProjectMeta();
+  scheduleProjectAutoSave();
 }
 
 function resizeCanvases() {
@@ -874,21 +1039,12 @@ async function captureFrame() {
 
     state.frames.push(frame);
     state.currentFrameIndex = state.frames.length - 1;
-    await dbSaveFrame({
-      id: frame.id,
-      projectId: frame.projectId,
-      blob: frame.blob,
-      thumbBlob: frame.thumbBlob,
-      w: frame.w, h: frame.h,
-      capturedAt: frame.capturedAt,
-      seqIndex: frame.seqIndex,
-    });
-    await saveProjectMeta();
-
     state.undoStack.push({ type: 'capture', frameId: frame.id });
+
     updateStatus();
     renderTimeline(true);
     drawOnion();
+    scheduleProjectAutoSave();
 
     if (navigator.vibrate) navigator.vibrate(40);
   } catch (e) {
@@ -900,7 +1056,7 @@ async function captureFrame() {
 }
 
 // ============================================================
-// PASO 3: DUPLICAR, REPETIR Y REORDENAR CUADROS
+// DUPLICAR, REPETIR Y REORDENAR CUADROS
 // ============================================================
 function createFrameClone(sourceFrame) {
   return {
@@ -938,12 +1094,11 @@ async function repeatActiveFrame(extraCopies = 1) {
     prevIndex: idx,
   });
 
-  await dbSyncFrameOrder();
-  await saveProjectMeta();
   syncViewportDisplay();
   updateStatus();
   renderTimeline(true);
   if (state.viewMode === 'live') drawOnion();
+  scheduleProjectAutoSave();
 
   showToast(
     extraCopies === 1
@@ -968,12 +1123,11 @@ async function moveFrame(fromIndex, toIndex) {
   state.currentFrameIndex = toIndex;
   state.undoStack.push({ type: 'reorder', from: fromIndex, to: toIndex });
 
-  await dbSyncFrameOrder();
-  await saveProjectMeta();
   syncViewportDisplay();
   updateStatus();
   renderTimeline(true);
   if (state.viewMode === 'live') drawOnion();
+  scheduleProjectAutoSave();
 }
 
 async function deleteFrame(id) {
@@ -982,7 +1136,6 @@ async function deleteFrame(id) {
   if (idx < 0) return;
   const snapshot = state.frames[idx];
   state.frames.splice(idx, 1);
-  await dbDeleteFrame(id);
   if (state.frames.length === 0) {
     state.currentFrameIndex = -1;
     state.viewMode = 'live';
@@ -990,11 +1143,10 @@ async function deleteFrame(id) {
     state.currentFrameIndex = state.frames.length - 1;
   }
   state.undoStack.push({ type: 'delete', frame: snapshot, idx });
-  await dbSyncFrameOrder();
   syncViewportDisplay();
   updateStatus();
   renderTimeline(false);
-  await saveProjectMeta();
+  scheduleProjectAutoSave();
 }
 
 async function undo() {
@@ -1011,18 +1163,16 @@ async function undo() {
       URL.revokeObjectURL(f.url);
       URL.revokeObjectURL(f.thumbUrl);
       state.frames.splice(idx, 1);
-      await dbDeleteFrame(op.frameId);
       if (state.frames.length === 0) {
         state.currentFrameIndex = -1;
         state.viewMode = 'live';
       } else if (state.currentFrameIndex >= state.frames.length) {
         state.currentFrameIndex = state.frames.length - 1;
       }
-      await dbSyncFrameOrder();
       syncViewportDisplay();
       updateStatus();
       renderTimeline(true);
-      await saveProjectMeta();
+      scheduleProjectAutoSave();
       showToast('Captura deshecha');
     }
   } else if (op.type === 'duplicate') {
@@ -1033,40 +1183,34 @@ async function undo() {
       URL.revokeObjectURL(f.thumbUrl);
     });
     state.frames = state.frames.filter(f => !idsSet.has(f.id));
-    for (const id of op.insertedIds) {
-      await dbDeleteFrame(id);
-    }
     state.currentFrameIndex = Math.min(op.prevIndex, state.frames.length - 1);
-    await dbSyncFrameOrder();
     syncViewportDisplay();
     updateStatus();
     renderTimeline(true);
-    await saveProjectMeta();
+    scheduleProjectAutoSave();
     showToast('Duplicación deshecha');
   } else if (op.type === 'reorder') {
     const [moved] = state.frames.splice(op.to, 1);
     state.frames.splice(op.from, 0, moved);
     state.currentFrameIndex = op.from;
-    await dbSyncFrameOrder();
     syncViewportDisplay();
     updateStatus();
     renderTimeline(true);
-    await saveProjectMeta();
+    scheduleProjectAutoSave();
     showToast('Orden restaurado');
   } else if (op.type === 'delete' && op.frame) {
     state.frames.splice(op.idx, 0, op.frame);
     state.currentFrameIndex = op.idx;
-    await dbSyncFrameOrder();
     syncViewportDisplay();
     updateStatus();
     renderTimeline(true);
-    await saveProjectMeta();
+    scheduleProjectAutoSave();
     showToast('Cuadro restaurado');
   }
 }
 
 // ============================================================
-// PASO 4: EXPORTACIÓN MP4 (H.264 vía WebCodecs + mp4-muxer) Y GIF
+// EXPORTACIÓN MP4 (H.264 vía WebCodecs + mp4-muxer) Y GIF
 // ============================================================
 function updateExportProgress(pct, text) {
   $('exportProgressWrap').style.display = 'block';
@@ -1120,12 +1264,11 @@ function triggerDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-function sanitizeFilename(name) {
-  return (name || 'animacion')
+function sanitizeExportFilename(name) {
+  return (name || DEFAULT_PROJ_NAME)
     .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9áéíóúñ_-]+/gi, '_')
-    .replace(/^_+|_+$/g, '') || 'animacion';
+    .replace(/[\\/:*?"<>|]/g, '_')
+    .replace(/^_+|_+$/g, '') || DEFAULT_PROJ_NAME;
 }
 
 async function exportAsMp4(fps, outW, outH) {
@@ -1135,15 +1278,14 @@ async function exportAsMp4(fps, outW, outH) {
 
   const totalFrames = state.frames.length;
   const frameDurationUs = Math.round(1_000_000 / fps);
-  // Bitrate proporcional a resolución (hasta ~10 Mbps para 1080p)
   const pixels = outW * outH;
   const bitrate = Math.min(12_000_000, Math.max(2_000_000, Math.round(pixels * 4.5)));
 
   const codecCandidates = [
-    'avc1.640028', // High Profile L4.0 (soporta 1080p30)
-    'avc1.4d4028', // Main Profile L4.0
-    'avc1.420028', // Baseline L4.0
-    'avc1.42001f', // Baseline L3.1
+    'avc1.640028',
+    'avc1.4d4028',
+    'avc1.420028',
+    'avc1.42001f',
   ];
 
   let selectedCodec = null;
@@ -1214,7 +1356,6 @@ async function exportAsMp4(fps, outW, outH) {
     encoder.encode(videoFrame, { keyFrame });
     videoFrame.close();
 
-    // Ceder brevemente al hilo principal para mantener fluida la barra de progreso
     if (i % 4 === 0) {
       await new Promise(r => setTimeout(r, 0));
     }
@@ -1320,7 +1461,7 @@ async function runExport() {
 
     if (blob && !state.exportCancelled) {
       const ext = fmt === 'mp4' ? 'mp4' : 'gif';
-      const baseName = sanitizeFilename(state.projectName);
+      const baseName = sanitizeExportFilename(projectManager?.currentProjectName || state.projectName);
       const filename = `${baseName}_${resTier}p_${fps}fps.${ext}`;
       triggerDownload(blob, filename);
       showToast(`Descargado: ${filename}`);
@@ -1521,6 +1662,7 @@ function setCaptureUiHidden(hidden) {
     ? '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>'
     : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
 }
+
 function setTimelineHidden(hidden) {
   state.hideTimeline = hidden;
   const app = document.querySelector('.stopmotion-app');
@@ -1541,80 +1683,13 @@ function setTimelineHidden(hidden) {
 }
 
 // ============================================================
-// PROJECTS & SETTINGS
+// SETTINGS MODALS
 // ============================================================
-async function saveProjectMeta() {
-  const meta = {
-    id: state.projectId,
-    name: state.projectName,
-    fps: state.fps,
-    orient: state.orient,
-    resTier: state.resTier,
-    fitMode: state.fitMode,
-    onionEnabled: state.onionEnabled,
-    onionOpacity: state.onionOpacity,
-    onionLayers: state.onionLayers,
-    gridMode: state.gridMode,
-    facingMode: state.facingMode,
-    modifiedAt: Date.now(),
-    createdAt: state._createdAt || Date.now(),
-    frameCount: state.frames.length,
-  };
-  state._createdAt = meta.createdAt;
-  await dbSaveProject(meta);
-  localStorage.setItem('lastProjectId', state.projectId);
-}
-
-async function loadProject(id) {
-  pausePlayback();
-  const meta = await dbLoadProject(id);
-  if (!meta) throw new Error('Proyecto no encontrado');
-  state.projectId = meta.id;
-  state.projectName = meta.name;
-  state.fps = FPS_OPTIONS.includes(meta.fps) ? meta.fps : 12;
-  state.orient = meta.orient || 'landscape';
-  state.resTier = normalizeLegacyResTier(meta.resTier ?? meta.resWidth ?? 1080);
-  state.fitMode = meta.fitMode || 'cover';
-  state.onionEnabled = !!meta.onionEnabled;
-  state.onionOpacity = meta.onionOpacity ?? 0.4;
-  state.onionLayers = meta.onionLayers ?? 1;
-  state.gridMode = meta.gridMode ?? 0;
-  state.facingMode = meta.facingMode || 'environment';
-  state._createdAt = meta.createdAt;
-
-  state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
-  state.frames = [];
-  state.currentFrameIndex = -1;
-  state.viewMode = 'live';
-
-  const framesData = await dbLoadFrames(id);
-  framesData.sort((a, b) => a.seqIndex - b.seqIndex);
-  for (const fd of framesData) {
-    const url = URL.createObjectURL(fd.blob);
-    const thumbUrl = URL.createObjectURL(fd.thumbBlob);
-    state.frames.push({
-      id: fd.id, blob: fd.blob, url,
-      thumbBlob: fd.thumbBlob, thumbUrl,
-      w: fd.w, h: fd.h,
-      capturedAt: fd.capturedAt,
-      seqIndex: fd.seqIndex,
-      projectId: fd.projectId,
-    });
-  }
-  state.currentFrameIndex = state.frames.length - 1;
-
-  applySettingsToUI();
-  syncViewportDisplay();
-  updateStatus();
-  renderTimeline(true);
-  localStorage.setItem('lastProjectId', id);
-}
-
 function openModal(id) { $(id).style.display = 'flex'; }
 function closeModal(id) { $(id).style.display = 'none'; }
 
 function applySettingsToUI() {
-  $('projName').value = state.projectName;
+  $('projName').value = projectManager?.currentProjectName || state.projectName || DEFAULT_PROJ_NAME;
   document.querySelectorAll('#orientChips .chip-btn').forEach(b => {
     b.classList.toggle('selected', b.dataset.orient === state.orient);
   });
@@ -1632,11 +1707,17 @@ function applySettingsToUI() {
 
 async function saveSettings() {
   const prevRes = state.resTier;
-  state.projectName = $('projName').value.trim() || 'Mi animación';
+  const typedName = $('projName').value.trim() || DEFAULT_PROJ_NAME;
+  state.projectName = typedName;
+  if (projectManager) {
+    projectManager.currentProjectName = typedName;
+  }
   state.fitMode = $('fitMode').value;
-  state.onionOpacity = parseInt($('onionOpacity').value) / 100;
-  state.onionLayers = parseInt($('onionLayers').value);
-  await saveProjectMeta();
+  state.onionOpacity = parseInt($('onionOpacity').value, 10) / 100;
+  state.onionLayers = parseInt($('onionLayers').value, 10);
+
+  await persistProjectNow();
+  updateProjectHeaderUI({ name: typedName, isDirty: projectManager?.isDirty });
   applySettingsToUI();
   updateStatus();
   resizeCanvases();
@@ -1645,60 +1726,6 @@ async function saveSettings() {
   }
   closeModal('settingsModal');
   showToast(`Ajustes guardados (${state.resTier}p)`);
-}
-
-async function renderProjectsList() {
-  const list = await dbListProjects();
-  list.sort((a, b) => (b.modifiedAt || 0) - (a.modifiedAt || 0));
-  const container = $('projectsList');
-  container.innerHTML = '';
-  if (list.length === 0) {
-    container.innerHTML = '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px; grid-column:1/-1;">No hay proyectos guardados</div>';
-    return;
-  }
-  for (const p of list) {
-    const card = document.createElement('div');
-    card.className = 'project-card';
-    const frames = await dbLoadFrames(p.id);
-    frames.sort((a, b) => a.seqIndex - b.seqIndex);
-    let thumbHtml = '<span>Sin cuadros</span>';
-    if (frames.length > 0 && frames[0].thumbBlob) {
-      const url = URL.createObjectURL(frames[0].thumbBlob);
-      thumbHtml = `<img src="${url}" alt="">`;
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    }
-    const safeName = document.createElement('div');
-    safeName.textContent = p.name;
-    card.innerHTML = `
-      <div class="thumb-area">${thumbHtml}</div>
-      <div class="info">
-        <div class="name">${safeName.innerHTML}</div>
-        <div class="meta">${new Date(p.modifiedAt).toLocaleDateString()} · ${p.frameCount || 0} cuadros</div>
-      </div>
-      <div class="actions">
-        <button data-act="open">Abrir</button>
-        <button data-act="del">Borrar</button>
-      </div>
-    `;
-    card.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (btn.dataset.act === 'open') {
-          await loadProject(p.id);
-          await initCamera();
-          closeModal('projectsModal');
-          showToast(`Proyecto abierto: ${p.name}`);
-        } else if (btn.dataset.act === 'del') {
-          if (confirm(`¿Eliminar "${p.name}"?`)) {
-            await dbDeleteProject(p.id);
-            await renderProjectsList();
-            showToast('Proyecto eliminado');
-          }
-        }
-      });
-    });
-    container.appendChild(card);
-  }
 }
 
 // ============================================================
@@ -1750,7 +1777,7 @@ $('loopBtn').addEventListener('click', () => {
   showToast(state.loop ? 'Bucle activado' : 'Bucle desactivado');
 });
 
-// Controles de edición de línea de tiempo (Paso 3)
+// Controles de edición de línea de tiempo
 $('moveLeftBtn').addEventListener('click', async () => {
   const idx = state.currentFrameIndex;
   if (idx > 0) {
@@ -1797,19 +1824,19 @@ $('confirmRepeatBtn').addEventListener('click', async () => {
 
 $('cameraBtn').addEventListener('click', toggleCamera);
 
-$('onionBtn').addEventListener('click', async () => {
+$('onionBtn').addEventListener('click', () => {
   if (state.viewMode !== 'live') returnToLiveCamera();
   state.onionEnabled = !state.onionEnabled;
   $('onionBtn').classList.toggle('active', state.onionEnabled);
   drawOnion();
-  await saveProjectMeta();
+  scheduleProjectAutoSave();
 });
 
-$('gridBtn').addEventListener('click', async () => {
+$('gridBtn').addEventListener('click', () => {
   state.gridMode = (state.gridMode + 1) % 4;
   $('gridBtn').classList.toggle('active', state.gridMode > 0);
   drawGrid();
-  await saveProjectMeta();
+  scheduleProjectAutoSave();
 });
 
 $('undoBtn').addEventListener('click', undo);
@@ -1832,14 +1859,12 @@ $('clearAllBtn').addEventListener('click', async () => {
   }
   if (!confirm(`¿Eliminar TODOS los ${state.frames.length} cuadros?`)) return;
   pausePlayback();
-  const ids = state.frames.map(f => f.id);
-  state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
+  revokeAllFrameUrls();
   state.frames = [];
   state.currentFrameIndex = -1;
   state.viewMode = 'live';
   state.undoStack = [];
-  for (const id of ids) await dbDeleteFrame(id);
-  await saveProjectMeta();
+  await persistProjectNow();
   setCaptureUiHidden(false);
   syncViewportDisplay();
   updateStatus();
@@ -1847,23 +1872,23 @@ $('clearAllBtn').addEventListener('click', async () => {
   showToast('Línea de tiempo vacía');
 });
 
-$('fpsBtn').addEventListener('click', async () => {
+$('fpsBtn').addEventListener('click', () => {
   const idx = FPS_OPTIONS.indexOf(state.fps);
   state.fps = FPS_OPTIONS[(idx + 1) % FPS_OPTIONS.length];
   $('exportFps').value = String(state.fps);
   updateStatus();
-  await saveProjectMeta();
+  scheduleProjectAutoSave();
   showToast(`Velocidad: ${state.fps} FPS`);
 });
 
-$('aspectBtn').addEventListener('click', async () => {
+$('aspectBtn').addEventListener('click', () => {
   const opts = ['landscape', 'portrait', 'square'];
   const idx = opts.indexOf(state.orient);
   state.orient = opts[(idx + 1) % opts.length];
   applySettingsToUI();
   updateStatus();
   requestAnimationFrame(() => resizeCanvases());
-  await saveProjectMeta();
+  scheduleProjectAutoSave();
   showToast(`Aspecto: ${ASPECT_LABELS[state.orient]}`);
 });
 
@@ -1885,14 +1910,40 @@ $('flashBtn').addEventListener('click', async () => {
   }
 });
 
-$('projectsBtn').addEventListener('click', async () => {
+// Botones de Proyecto en la barra superior (Nuevo / Abrir / Guardar / Guardar como)
+$('newProjectBtn').addEventListener('click', async () => {
   pausePlayback();
-  await renderProjectsList();
-  openModal('projectsModal');
+  if (projectManager) {
+    await projectManager.newProject();
+  }
+});
+
+$('openProjectBtn').addEventListener('click', async () => {
+  pausePlayback();
+  if (projectManager) {
+    await projectManager.openModal();
+  }
+});
+
+$('saveProjectBtn').addEventListener('click', async () => {
+  pausePlayback();
+  if (projectManager) {
+    await projectManager.save();
+  }
+});
+
+$('saveAsProjectBtn').addEventListener('click', async () => {
+  pausePlayback();
+  if (projectManager) {
+    await projectManager.saveAs();
+  }
 });
 
 $('settingsBtn').addEventListener('click', () => {
   pausePlayback();
+  if (projectManager) {
+    state.projectName = projectManager.currentProjectName;
+  }
   applySettingsToUI();
   openModal('settingsModal');
 });
@@ -1909,7 +1960,7 @@ $('exportBtn').addEventListener('click', () => {
   openModal('exportModal');
 });
 
-// Controles del modal de exportación (Paso 4)
+// Controles del modal de exportación
 document.querySelectorAll('#exportFormatChips .chip-btn').forEach(b => {
   b.addEventListener('click', () => {
     if (state.exporting) return;
@@ -1934,35 +1985,13 @@ $('cancelExportBtn').addEventListener('click', () => {
   }
 });
 
-$('newProjectBtn').addEventListener('click', async () => {
-  const name = prompt('Nombre del proyecto:', 'Mi animación');
-  if (name === null) return;
-  pausePlayback();
-  state.projectId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-  state.projectName = name.trim() || 'Mi animación';
-  state.frames.forEach(f => { URL.revokeObjectURL(f.url); URL.revokeObjectURL(f.thumbUrl); });
-  state.frames = [];
-  state.currentFrameIndex = -1;
-  state.viewMode = 'live';
-  state.undoStack = [];
-  state._createdAt = Date.now();
-  await saveProjectMeta();
-  applySettingsToUI();
-  syncViewportDisplay();
-  updateStatus();
-  renderTimeline(false);
-  setCaptureUiHidden(false);
-  closeModal('projectsModal');
-  showToast(`Nuevo proyecto: ${state.projectName}`);
-});
-
 document.querySelectorAll('#orientChips .chip-btn').forEach(b => {
-  b.addEventListener('click', async () => {
+  b.addEventListener('click', () => {
     state.orient = b.dataset.orient;
     document.querySelectorAll('#orientChips .chip-btn').forEach(x => x.classList.remove('selected'));
     b.classList.add('selected');
     updateStatus();
-    await saveProjectMeta();
+    scheduleProjectAutoSave();
     requestAnimationFrame(() => resizeCanvases());
   });
 });
@@ -1974,19 +2003,19 @@ document.querySelectorAll('#resChips .chip-btn').forEach(b => {
     b.classList.add('selected');
     $('exportRes').value = String(state.resTier);
     updateStatus();
-    await saveProjectMeta();
+    scheduleProjectAutoSave();
     await initCamera();
   });
 });
 
 $('onionOpacity').addEventListener('input', (e) => {
-  state.onionOpacity = parseInt(e.target.value) / 100;
+  state.onionOpacity = parseInt(e.target.value, 10) / 100;
   $('onionOpacityVal').textContent = e.target.value + '%';
   drawOnion();
 });
 
 $('onionLayers').addEventListener('input', (e) => {
-  state.onionLayers = parseInt(e.target.value);
+  state.onionLayers = parseInt(e.target.value, 10);
   $('onionLayersVal').textContent = e.target.value;
   drawOnion();
 });
@@ -2001,6 +2030,29 @@ document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
   const anyModalOpen = Array.from(document.querySelectorAll('.modal-backdrop')).some(m => m.style.display === 'flex');
   if (anyModalOpen) return;
+
+  // Atajos estándar de proyecto (Ctrl/Cmd)
+  if (e.ctrlKey || e.metaKey) {
+    if (e.code === 'KeyS') {
+      e.preventDefault();
+      pausePlayback();
+      if (e.shiftKey) projectManager?.saveAs();
+      else projectManager?.save();
+      return;
+    }
+    if (e.code === 'KeyO') {
+      e.preventDefault();
+      pausePlayback();
+      projectManager?.openModal();
+      return;
+    }
+    if (e.code === 'KeyN') {
+      e.preventDefault();
+      pausePlayback();
+      projectManager?.newProject();
+      return;
+    }
+  }
 
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
@@ -2043,23 +2095,25 @@ video.addEventListener('playing', resizeCanvases);
 async function init() {
   applyTheme(localStorage.getItem('epanimeitor-theme') || 'dark');
   try {
-    state.db = await openDb();
-    const lastId = localStorage.getItem('lastProjectId');
-    if (lastId) {
-      try {
-        await loadProject(lastId);
-      } catch (e) {
-        state.projectId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-        state.projectName = 'Mi animación';
-        state._createdAt = Date.now();
-        await saveProjectMeta();
-      }
-    } else {
-      state.projectId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      state.projectName = 'Mi animación';
-      state._createdAt = Date.now();
-      await saveProjectMeta();
+    if (typeof EpaProjectManager === 'undefined') {
+      throw new Error('No se encontró epa-projects.js. Verificá que esté en la misma carpeta.');
     }
+
+    projectManager = new EpaProjectManager({
+      appId: 'estopmouyon',
+      extension: 'estop',
+      appTitle: 'Estopmouyon',
+      getProjectState: buildProjectSnapshot,
+      applyProjectState: restoreProjectFromState,
+      createNewState: createBlankProjectState,
+      serializeFile: serializeEstopFile,
+      deserializeFile: deserializeEstopFile,
+      onToast: showToast,
+      onStateChange: updateProjectHeaderUI,
+    });
+
+    await projectManager.init();
+    await migrateLegacyStopmotionDb(projectManager);
 
     $('exportFps').value = String(state.fps);
     $('exportRes').value = String(state.resTier);

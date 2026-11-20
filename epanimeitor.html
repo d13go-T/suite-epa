@@ -7,6 +7,8 @@
 <meta name="description" content="Crea animaciones dibujando cuadro a cuadro y exportalas como GIF. Simple, colorido y gratuito. Escuela para Animadores Rosario.">
 
 <link rel="stylesheet" href="epa-theme.css">
+<!-- Gestor unificado de proyectos Suite EPA (.epa + IndexedDB) -->
+<script src="epa-projects.js"></script>
 
 </head>
 <body>
@@ -23,19 +25,23 @@
         </a>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-sm" id="btnNew" title="Nueva animación">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-          <span>Nuevo</span>
+        <button class="btn btn-sm" id="btnNew" title="Nuevo proyecto (Ctrl+N)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          <span class="btn-label-hide-sm">Nuevo</span>
         </button>
-        <button class="btn btn-sm" id="btnSave" title="Guardar proyecto (.epa)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          <span>Guardar</span>
+        <button class="btn btn-sm" id="btnOpen" title="Abrir proyecto (Ctrl+O)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg>
+          <span>Abrir</span>
         </button>
-        <button class="btn btn-sm" id="btnLoad" title="Cargar proyecto (.epa)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          <span>Cargar</span>
+        <button class="btn btn-sm" id="btnSave" title="Guardar proyecto (Ctrl+S)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span id="saveProjectLabel">Guardar</span>
         </button>
-        <button class="btn btn-sm btn-success" id="btnExport" title="Exportar GIF animado">
+        <button class="btn btn-sm" id="btnSaveAs" title="Guardar como... (Ctrl+Shift+S)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
+          <span class="btn-label-hide-sm">Guardar como</span>
+        </button>
+        <button class="btn btn-sm btn-success" id="btnExport" title="Exportar GIF animado (Ctrl+E)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           <span>GIF</span>
         </button>
@@ -44,7 +50,7 @@
         </button>
         <button class="btn btn-sm btn-ghost" id="btnHelp" title="Ayuda y atajos">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span>Ayuda</span>
+          <span class="btn-label-hide-sm">Ayuda</span>
         </button>
       </div>
     </div>
@@ -214,7 +220,9 @@
       <p><kbd>J</kbd> / <kbd>K</kbd> – Fotograma anterior / siguiente</p>
       <p><kbd>1</kbd>–<kbd>7</kbd> – Seleccionar herramienta</p>
       <p><kbd>Ctrl/Cmd + Z</kbd> – Deshacer · <kbd>Ctrl/Cmd + Shift + Z</kbd> – Rehacer</p>
-      <p><kbd>Ctrl/Cmd + S</kbd> – Guardar · <kbd>Ctrl/Cmd + E</kbd> – Exportar GIF</p>
+      <p><kbd>Ctrl/Cmd + N</kbd> – Nuevo · <kbd>Ctrl/Cmd + O</kbd> – Abrir</p>
+      <p><kbd>Ctrl/Cmd + S</kbd> – Guardar · <kbd>Ctrl/Cmd + Shift + S</kbd> – Guardar como</p>
+      <p><kbd>Ctrl/Cmd + E</kbd> – Exportar GIF</p>
       <hr>
       <p class="tip">Tip: activá <b>onion skin</b> en la línea de tiempo para ver el fotograma anterior en transparente y animar con más precisión.</p>
       <div class="dialog-footer-logo">
@@ -226,7 +234,6 @@
 </dialog>
 
 <div class="toast" id="toast">Proyecto cargado</div>
-<input type="file" id="fileInput" class="hidden-input" accept=".epa,.json,application/json">
 
 <script type="module">
 // ====== gifenc inline (ESM) ======
@@ -241,6 +248,7 @@ const THUMB_W = 64;
 const THUMB_H = 48;
 const DEFAULT_PALETTE = ['#1a1a1a','#FFFFFF','#888888','#FF6B6B','#FFA94D','#FFD93D','#6BCB77','#4D96FF','#9B59B6','#FF6FB5','#FFB6C1','#87CEEB','#98FB98','#DDA0DD','#F5DEB3','#2C2C2C'];
 const BG_PRESETS = ['#FFFFFF','#FFF8E7','#E0F7FA','#FCE4EC','#F1F8E9','#FFF3E0','#EDE7F6','#ECEFF1','#1a1a1a'];
+const DEFAULT_PROJ_NAME = window.EpaProjectUtils?.DEFAULT_PROJECT_NAME || 'Animacion sin titulo';
 
 const TOOLS = [
   { id:'pencil', label:'Lápiz', key:'1', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>' },
@@ -266,8 +274,11 @@ let state = {
   undoStack: [],
   redoStack: [],
   customColor: '#FF6B6B',
-  projectName: 'sin titulo',
+  projectId: null,
+  projectName: DEFAULT_PROJ_NAME,
 };
+
+let projectManager = null;
 
 const drawCanvas = document.getElementById('drawCanvas');
 const previewCanvas = document.getElementById('previewCanvas');
@@ -312,11 +323,175 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 let playTimer = null;
 let dragSrcIdx = null;
+
+// ====== Gestor unificado de proyectos (epa-projects.js v2 -> .epa + IndexedDB) ======
+function updateProjectHeaderUI(info = {}) {
+  const name = info.name || projectManager?.currentProjectName || state.projectName || DEFAULT_PROJ_NAME;
+  state.projectName = name;
+
+  const saveLabel = document.getElementById('saveProjectLabel');
+  const saveBtn = document.getElementById('btnSave');
+  if (saveLabel) {
+    saveLabel.textContent = info.isDirty ? 'Guardar*' : 'Guardar';
+  }
+  if (saveBtn) {
+    const targetFile = info.fileName ? ` (${info.fileName})` : '';
+    saveBtn.title = `Guardar proyecto${targetFile} (Ctrl+S)`;
+  }
+  document.title = `${info.isDirty ? '• ' : ''}${name} · Epanimeitor`;
+}
+
+async function generateFirstFrameThumb() {
+  const first = state.frames[0];
+  if (!first) return '';
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 96;
+  const ctx = c.getContext('2d');
+  if (state.bgColor && state.bgColor !== 'transparent') {
+    ctx.fillStyle = state.bgColor;
+    ctx.fillRect(0, 0, c.width, c.height);
+  }
+  if (first.data) {
+    try {
+      const img = await loadImage(first.data);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+    } catch (_) {}
+  }
+  return c.toDataURL('image/jpeg', 0.78);
+}
+
+async function buildProjectSnapshot() {
+  const thumb = await generateFirstFrameThumb();
+  return {
+    id: state.projectId,
+    name: state.projectName || DEFAULT_PROJ_NAME,
+    frameCount: state.frames.length,
+    thumb,
+    payload: {
+      width: CANVAS_W,
+      height: CANVAS_H,
+      bgColor: state.bgColor,
+      fps: state.fps,
+      onionSkin: state.onionSkin,
+      frames: state.frames.map(f => ({
+        id: f.id,
+        data: f.data,
+        duration: f.duration || 100,
+      })),
+    },
+  };
+}
+
+async function restoreProjectFromState(meta, payload = {}) {
+  state.isPlaying = false;
+  if (playTimer) {
+    clearTimeout(playTimer);
+    playTimer = null;
+  }
+  updatePlayButton();
+
+  state.projectId = meta.id;
+  state.projectName = (meta.name || DEFAULT_PROJ_NAME).trim() || DEFAULT_PROJ_NAME;
+
+  const rawFrames = Array.isArray(payload.frames) && payload.frames.length > 0
+    ? payload.frames
+    : [{ id: uid(), data: emptyFrame(), duration: 100 }];
+
+  state.frames = rawFrames.map(f => ({
+    id: f.id || uid(),
+    data: f.data || emptyFrame(),
+    duration: f.duration || 100,
+  }));
+  state.currentIdx = 0;
+  state.bgColor = payload.bgColor || '#FFFFFF';
+  state.fps = payload.fps || 8;
+  state.onionSkin = Boolean(payload.onionSkin);
+  state.undoStack = [];
+  state.redoStack = [];
+
+  document.getElementById('fpsSlider').value = state.fps;
+  updateOnionButton();
+  renderToolRail();
+  renderBgPresets();
+  updateBgDisplay();
+  await loadCurrentFrame();
+  renderFrames();
+}
+
+async function createBlankProjectState(name, id) {
+  state.isPlaying = false;
+  if (playTimer) {
+    clearTimeout(playTimer);
+    playTimer = null;
+  }
+  updatePlayButton();
+
+  state.projectId = id;
+  state.projectName = (name || DEFAULT_PROJ_NAME).trim() || DEFAULT_PROJ_NAME;
+  state.frames = [{ id: uid(), data: emptyFrame(), duration: 100 }];
+  state.currentIdx = 0;
+  state.bgColor = '#FFFFFF';
+  state.fps = 8;
+  state.onionSkin = false;
+  state.undoStack = [];
+  state.redoStack = [];
+
+  document.getElementById('fpsSlider').value = state.fps;
+  updateOnionButton();
+  renderToolRail();
+  renderBgPresets();
+  updateBgDisplay();
+  await loadCurrentFrame();
+  renderFrames();
+}
+
+// Serialización compatible con el formato .epa histórico de Epanimeitor
+function serializeEpaFile(meta, payload) {
+  return JSON.stringify({
+    suite: 'EPA',
+    appId: 'epanimeitor',
+    version: 1,
+    name: meta.name || DEFAULT_PROJ_NAME,
+    width: payload.width || CANVAS_W,
+    height: payload.height || CANVAS_H,
+    bgColor: payload.bgColor || '#FFFFFF',
+    fps: payload.fps || 8,
+    onionSkin: Boolean(payload.onionSkin),
+    frames: payload.frames || [],
+    savedAt: new Date().toISOString(),
+  }, null, 2);
+}
+
+// Deserialización que soporta tanto archivos .epa nuevos como los de v1.0–1.2
+function deserializeEpaFile(rawObj, fileBaseName) {
+  const src = rawObj.payload || rawObj;
+  if (!src.frames || !Array.isArray(src.frames)) {
+    throw new Error('Formato de archivo .epa inválido');
+  }
+  return {
+    name: rawObj.name || src.name || fileBaseName || DEFAULT_PROJ_NAME,
+    payload: {
+      width: src.width || CANVAS_W,
+      height: src.height || CANVAS_H,
+      bgColor: src.bgColor || '#FFFFFF',
+      fps: src.fps || 8,
+      onionSkin: Boolean(src.onionSkin),
+      frames: src.frames,
+    },
+  };
+}
+
+function scheduleProjectAutoSave() {
+  if (projectManager) {
+    projectManager.scheduleAutoSave();
+  }
+}
 
 // ====== Tool rail ======
 function renderToolRail() {
@@ -379,7 +554,14 @@ function renderBgPresets() {
     sw.className = 'bg-swatch' + (state.bgColor === c ? ' active' : '');
     sw.style.background = c;
     sw.title = c;
-    sw.addEventListener('click', () => { state.bgColor = c; updateBgDisplay(); renderFrames(); loadCurrentFrame(); });
+    sw.addEventListener('click', () => {
+      state.bgColor = c;
+      updateBgDisplay();
+      renderBgPresets();
+      renderFrames();
+      loadCurrentFrame();
+      scheduleProjectAutoSave();
+    });
     grid.appendChild(sw);
   });
 }
@@ -656,6 +838,7 @@ function commitFrame() {
   const dataUrl = drawCanvas.toDataURL('image/png');
   state.frames[state.currentIdx] = { ...state.frames[state.currentIdx], data: dataUrl };
   renderFrames();
+  scheduleProjectAutoSave();
 }
 
 // ====== Load current frame (sin parpadeo) ======
@@ -672,7 +855,7 @@ async function loadCurrentFrame() {
       } catch (_) {}
     }
   }
-// Borrado y dibujado síncrono en el mismo frame de renderizado
+  // Borrado y dibujado síncrono en el mismo frame de renderizado
   drawCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
   if (img) {
     drawCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
@@ -715,6 +898,7 @@ function toggleOnionSkin(forceState) {
   updateOnionButton();
   previewCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
   if (state.onionSkin && state.currentIdx > 0) drawOnionSkin();
+  scheduleProjectAutoSave();
 }
 
 function updateOnionButton() {
@@ -746,6 +930,7 @@ function reorderFrame(fromIdx, toIdx) {
   loadCurrentFrame();
   renderToolRail();
   renderFrames();
+  scheduleProjectAutoSave();
   showToast(`Fotograma movido a posición ${toIdx + 1}`);
 }
 
@@ -852,6 +1037,7 @@ function undo() {
   state.currentIdx = Math.min(state.currentIdx, state.frames.length-1);
   loadCurrentFrame();
   renderToolRail(); renderFrames();
+  scheduleProjectAutoSave();
 }
 function redo() {
   if (state.redoStack.length === 0) return;
@@ -860,6 +1046,7 @@ function redo() {
   state.currentIdx = Math.min(state.currentIdx, state.frames.length-1);
   loadCurrentFrame();
   renderToolRail(); renderFrames();
+  scheduleProjectAutoSave();
 }
 
 function addFrame() {
@@ -869,6 +1056,7 @@ function addFrame() {
   state.currentIdx++;
   loadCurrentFrame();
   renderFrames();
+  scheduleProjectAutoSave();
 }
 function duplicateFrame() {
   pushUndo();
@@ -878,6 +1066,7 @@ function duplicateFrame() {
   state.currentIdx++;
   loadCurrentFrame();
   renderFrames();
+  scheduleProjectAutoSave();
 }
 function deleteFrame() {
   if (state.frames.length <= 1) return;
@@ -886,12 +1075,14 @@ function deleteFrame() {
   state.currentIdx = Math.max(0, Math.min(state.currentIdx, state.frames.length-1));
   loadCurrentFrame();
   renderFrames();
+  scheduleProjectAutoSave();
 }
 function clearFrame() {
   pushUndo();
   state.frames[state.currentIdx] = { ...state.frames[state.currentIdx], data: emptyFrame() };
   loadCurrentFrame();
   renderFrames();
+  scheduleProjectAutoSave();
 }
 function moveFrame(dir) {
   const target = state.currentIdx + dir;
@@ -901,6 +1092,7 @@ function moveFrame(dir) {
   state.currentIdx = target;
   loadCurrentFrame();
   renderFrames();
+  scheduleProjectAutoSave();
 }
 
 // ====== Playback ======
@@ -990,13 +1182,14 @@ async function exportGif() {
     const blob = new Blob([gif.bytes()], { type: 'image/gif' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const safeName = (window.EpaProjectUtils?.sanitizeFilename(projectManager?.currentProjectName || state.projectName) || 'epanimeitor');
     a.href = url;
-    a.download = `epanimeitor-${Date.now()}.gif`;
+    a.download = `${safeName}.gif`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('GIF exportado');
+    showToast(`GIF exportado: ${safeName}.gif`);
   } catch (err) {
     alert('Error al exportar: ' + err.message);
   } finally {
@@ -1005,83 +1198,28 @@ async function exportGif() {
   }
 }
 
-// ====== Save / Load ======
-function saveProject() {
-  const inputName = prompt('Nombre del archivo:', state.projectName);
-  if (inputName === null) return;
-
-  let baseName = inputName.trim().replace(/[\\/:*?"<>|]/g, '_').replace(/\.(epa|json)$/i, '') || 'sin titulo';
-  state.projectName = baseName;
-  const fileName = baseName + '.epa';
-
-  const project = {
-    name: baseName,
-    width: CANVAS_W, height: CANVAS_H,
-    bgColor: state.bgColor, fps: state.fps,
-    onionSkin: state.onionSkin, frames: state.frames,
-  };
-  const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = fileName;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast(`Guardado como ${fileName}`);
-}
-function loadProject() {
-  document.getElementById('fileInput').click();
-}
-async function handleFileLoad(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    const project = JSON.parse(text);
-    if (!project.frames || !Array.isArray(project.frames)) throw new Error('Formato inválido');
-    state.frames = project.frames;
-    state.currentIdx = 0;
-    state.bgColor = project.bgColor || '#FFFFFF';
-    state.fps = project.fps || 8;
-    state.onionSkin = Boolean(project.onionSkin);
-    state.projectName = file.name.replace(/\.(epa|json)$/i, '') || project.name || 'sin titulo';
-    state.undoStack = []; state.redoStack = [];
-    state.isPlaying = false;
-    updatePlayButton();
-    updateOnionButton();
-    loadCurrentFrame();
-    renderFrames(); renderBgPresets(); updateBgDisplay();
-    document.getElementById('fpsSlider').value = state.fps;
-    showToast(`Proyecto "${state.projectName}" cargado`);
-  } catch (err) {
-    alert('No se pudo cargar: ' + err.message);
-  }
-  e.target.value = '';
-}
-
-function newAnimation() {
-  if (state.frames.length > 1 || state.frames[0].data !== emptyFrame()) {
-    if (!confirm('¿Empezar una animación nueva? Se perderán los cambios sin guardar.')) return;
-  }
-  state.frames = [{ id: uid(), data: emptyFrame(), duration: 100 }];
-  state.currentIdx = 0;
-  state.projectName = 'sin titulo';
-  state.undoStack = []; state.redoStack = [];
-  state.isPlaying = false;
-  updatePlayButton();
-  loadCurrentFrame();
-  renderFrames();
-}
-
 // ====== Wire events ======
 drawCanvas.addEventListener('pointerdown', onPointerDown);
 drawCanvas.addEventListener('pointermove', onPointerMove);
 drawCanvas.addEventListener('pointerup', onPointerUp);
 drawCanvas.addEventListener('pointercancel', onPointerUp);
 
-document.getElementById('btnNew').addEventListener('click', newAnimation);
-document.getElementById('btnSave').addEventListener('click', saveProject);
-document.getElementById('btnLoad').addEventListener('click', loadProject);
+document.getElementById('btnNew').addEventListener('click', async () => {
+  state.isPlaying = false; updatePlayButton();
+  if (projectManager) await projectManager.newProject();
+});
+document.getElementById('btnOpen').addEventListener('click', async () => {
+  state.isPlaying = false; updatePlayButton();
+  if (projectManager) await projectManager.openModal();
+});
+document.getElementById('btnSave').addEventListener('click', async () => {
+  state.isPlaying = false; updatePlayButton();
+  if (projectManager) await projectManager.save();
+});
+document.getElementById('btnSaveAs').addEventListener('click', async () => {
+  state.isPlaying = false; updatePlayButton();
+  if (projectManager) await projectManager.saveAs();
+});
 document.getElementById('btnExport').addEventListener('click', exportGif);
 document.getElementById('btnAdd').addEventListener('click', addFrame);
 document.getElementById('btnDuplicate').addEventListener('click', duplicateFrame);
@@ -1112,6 +1250,7 @@ document.getElementById('dialogClose').addEventListener('click', () => {
 document.getElementById('fpsSlider').addEventListener('input', e => {
   state.fps = parseInt(e.target.value);
   updateUI();
+  scheduleProjectAutoSave();
 });
 document.getElementById('brushSlider').addEventListener('input', e => {
   state.brushSize = parseInt(e.target.value);
@@ -1143,21 +1282,41 @@ document.getElementById('customColorText').addEventListener('input', e => {
 document.getElementById('bgColorInput').addEventListener('input', e => {
   state.bgColor = e.target.value;
   updateBgDisplay();
+  renderBgPresets();
   renderFrames();
   loadCurrentFrame();
+  scheduleProjectAutoSave();
 });
-
-document.getElementById('fileInput').addEventListener('change', handleFileLoad);
 
 // Keyboard shortcuts
 window.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const projectsModal = document.getElementById('epaProjectsModal');
+  if (projectsModal && projectsModal.style.display === 'flex') {
+    if (e.key === 'Escape') projectManager?.closeModal();
+    return;
+  }
+
   if (e.ctrlKey || e.metaKey) {
     if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
     else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); redo(); }
-    else if (e.key === 's') { e.preventDefault(); saveProject(); }
-    else if (e.key === 'e') { e.preventDefault(); exportGif(); }
-    else if (e.key === 'o') { e.preventDefault(); loadProject(); }
+    else if (e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      state.isPlaying = false; updatePlayButton();
+      if (e.shiftKey) projectManager?.saveAs();
+      else projectManager?.save();
+    }
+    else if (e.key.toLowerCase() === 'o') {
+      e.preventDefault();
+      state.isPlaying = false; updatePlayButton();
+      projectManager?.openModal();
+    }
+    else if (e.key.toLowerCase() === 'n') {
+      e.preventDefault();
+      state.isPlaying = false; updatePlayButton();
+      projectManager?.newProject();
+    }
+    else if (e.key.toLowerCase() === 'e') { e.preventDefault(); exportGif(); }
     return;
   }
   if (e.key === 'Escape' && viewState.zenMode) {
@@ -1389,17 +1548,39 @@ stageObserver.observe(canvasStage);
 window.addEventListener('resize', fitCanvasWrap);
 fitCanvasWrap();
 
-// Init
-applyTheme(localStorage.getItem('epanimeitor-theme') || 'light');
-renderToolRail();
-renderPalette();
-renderBgPresets();
-updateColorDisplay();
-updateBgDisplay();
-updateOnionButton();
-updateUI();
-loadCurrentFrame();
-renderFrames();
+// ====== Init ======
+async function init() {
+  applyTheme(localStorage.getItem('epanimeitor-theme') || 'light');
+  renderToolRail();
+  renderPalette();
+  renderBgPresets();
+  updateColorDisplay();
+  updateBgDisplay();
+  updateOnionButton();
+  updateUI();
+
+  if (typeof window.EpaProjectManager === 'function') {
+    projectManager = new window.EpaProjectManager({
+      appId: 'epanimeitor',
+      extension: 'epa',
+      appTitle: 'Epanimeitor',
+      getProjectState: buildProjectSnapshot,
+      applyProjectState: restoreProjectFromState,
+      createNewState: createBlankProjectState,
+      serializeFile: serializeEpaFile,
+      deserializeFile: deserializeEpaFile,
+      onToast: showToast,
+      onStateChange: updateProjectHeaderUI,
+    });
+    await projectManager.init();
+  } else {
+    console.warn('No se encontró epa-projects.js; ejecutando sin persistencia IndexedDB.');
+    await loadCurrentFrame();
+    renderFrames();
+  }
+}
+
+init();
 </script>
 
 
